@@ -25,7 +25,7 @@ A structured study repository for preparing for PHP and Drupal backend developer
 
 | Day | Topics |
 |---|---|
-| Day 1 | [PHP Fundamentals and OOP](https://github.com/prethiee/interview-prep/blob/main/day-01-php-fundamentals/notes.md) |
+| Day 1 | [PHP Fundamentals and OOP](https://github.com/prethiee/interview-prep/blob/main/day-01-php-fundamentals.md) |
 | Day 2 | Drupal Architecture and Request Lifecycle |
 | Day 3 | Drupal Services and Dependency Injection |
 | Day 4 | Plugins, Routing, Forms, Hooks, and Events |
