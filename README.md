@@ -37,26 +37,6 @@ A structured study repository for preparing for PHP and Drupal backend developer
 | Day 10 | Coding Exercises and Troubleshooting |
 | Day 11 | Mock Interview and Final Revision |
 
-## 📁 Repository Structure
-
-```text
-interview-prep/
-├── README.md
-├── day-01-php-fundamentals/
-│   ├── notes.md
-│   ├── interview-questions.md
-│   └── practice.php
-├── day-02-drupal-architecture/
-├── day-03-services-and-dependency-injection/
-├── day-04-plugins-routing-and-forms/
-├── day-05-entities-and-configuration/
-├── day-06-caching-and-performance/
-├── day-07-views-blocks-and-practical/
-├── day-08-rest-apis-and-integrations/
-├── day-09-sql-security-and-debugging/
-├── day-10-coding-and-troubleshooting/
-└── day-11-mock-interview/
-```
 
 ## 🧠 Learning Approach
 
@@ -78,19 +58,19 @@ PHP coding exercises can be practised using:
 
 For Drupal-specific exercises, use a local Drupal development environment with PHP, Composer, and a compatible database.
 
-## 📈 Progress Tracker
+## Concepts
 
-- [ ] Day 1 — PHP Fundamentals and OOP
-- [ ] Day 2 — Drupal Architecture
-- [ ] Day 3 — Services and Dependency Injection
-- [ ] Day 4 — Plugins, Routing, Forms, Hooks, and Events
-- [ ] Day 5 — Entities and Configuration
-- [ ] Day 6 — Caching and Performance
-- [ ] Day 7 — Views, Blocks, and Practical Development
-- [ ] Day 8 — REST APIs and Integrations
-- [ ] Day 9 — SQL, Security, and Debugging
-- [ ] Day 10 — Coding and Troubleshooting
-- [ ] Day 11 — Mock Interview and Revision
+ Day 1 — [PHP Fundamentals and OOP](https://github.com/prethiee/interview-prep/blob/main/day-01-php-fundamentals/notes.md) |
+ Day 2 — Drupal Architecture
+ Day 3 — Services and Dependency Injection
+ Day 4 — Plugins, Routing, Forms, Hooks, and Events
+ Day 5 — Entities and Configuration
+ Day 6 — Caching and Performance
+ Day 7 — Views, Blocks, and Practical Development
+ Day 8 — REST APIs and Integrations
+ Day 9 — SQL, Security, and Debugging
+ Day 10 — Coding and Troubleshooting
+ Day 11 — Mock Interview and Revision
 
 ## 🚀 Goal
 
