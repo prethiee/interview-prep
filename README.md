@@ -36,6 +36,7 @@ A structured study repository for preparing for PHP and Drupal backend developer
 | Day 9 | SQL, Security, Debugging, and Performance |
 | Day 10 | Coding Exercises and Troubleshooting |
 | Day 11 | Mock Interview and Final Revision |
+| Day 12 | [Drupal Interview Questions and Answers](https://github.com/prethiee/interview-prep/blob/main/day-12-interview-q%26a.md) |
 
 
 ## 🧠 Learning Approach
