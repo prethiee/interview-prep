@@ -1,7 +1,5 @@
 # Day 9 – SQL, Security, Debugging, and Performance
 
-**Filename:** `day-09-sql-security-debugging-performance.md`
-
 ## 1. SQL Fundamentals
 
 ### 1.1 What is SQL?
