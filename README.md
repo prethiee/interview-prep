@@ -29,7 +29,7 @@ A structured study repository for preparing for PHP and Drupal backend developer
 | Day 2 | [Drupal Architecture and Request Lifecycle](https://github.com/prethiee/interview-prep/blob/main/day-02-drupal-arch.md) |
 | Day 3 | [Drupal Services and Dependency Injection](https://github.com/prethiee/interview-prep/blob/main/day-03-services-and-di.md) |
 | Day 4 | [Plugins, Routing, Forms, Hooks, and Events](https://github.com/prethiee/interview-prep/blob/main/day-04-plugins-routing-forms-hooks-events.md) |
-| Day 5 | Entities, Fields, Configuration, and Workflows |
+| Day 5 | [Entities, Fields, Configuration, and Workflows](https://github.com/prethiee/interview-prep/blob/main/day-05-entities-fields-configuration-workflows.md) |
 | Day 6 | Drupal Caching and Performance Optimization |
 | Day 7 | Views, Blocks, and Practical Drupal Development |
 | Day 8 | REST APIs, HTTP Client, and Integrations |
