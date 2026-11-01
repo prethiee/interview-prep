@@ -33,7 +33,7 @@ A structured study repository for preparing for PHP and Drupal backend developer
 | Day 6 | [Drupal Caching and Performance Optimization](https://github.com/prethiee/interview-prep/blob/main/day-06-drupal-caching-performance.md) |
 | Day 7 | [Views, Blocks, and Practical Drupal Development](https://github.com/prethiee/interview-prep/blob/main/day-07-views-blocks-practical-drupal-development.md) |
 | Day 8 | [REST APIs, HTTP Client, and Integrations](https://github.com/prethiee/interview-prep/blob/main/day-08-rest-apis-http-client-integrations.md) |
-| Day 9 | SQL, Security, Debugging, and Performance |
+| Day 9 | [SQL, Security, Debugging, and Performance](https://github.com/prethiee/interview-prep/blob/main/day-09-sql-security-debugging-performance.md) |
 | Day 10 | Coding Exercises and Troubleshooting |
 | Day 11 | Mock Interview and Final Revision |
 | Day 12 | [Drupal Interview Questions and Answers](https://github.com/prethiee/interview-prep/blob/main/day-12-interview-q%26a.md) |
