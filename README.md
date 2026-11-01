@@ -35,7 +35,7 @@ A structured study repository for preparing for PHP and Drupal backend developer
 | Day 8 | [REST APIs, HTTP Client, and Integrations](https://github.com/prethiee/interview-prep/blob/main/day-08-rest-apis-http-client-integrations.md) |
 | Day 9 | [SQL, Security, Debugging, and Performance](https://github.com/prethiee/interview-prep/blob/main/day-09-sql-security-debugging-performance.md) |
 | Day 10 | [Coding Exercises and Troubleshooting](https://github.com/prethiee/interview-prep/blob/main/day-10-coding-exercises-troubleshooting.md) |
-| Day 11 | Mock Interview and Final Revision |
+| Day 11 | [Mock Interview and Final Revision](https://github.com/prethiee/interview-prep/blob/main/day-11-mock-interview-final-revision.md) |
 | Day 12 | [Drupal Interview Questions and Answers](https://github.com/prethiee/interview-prep/blob/main/day-12-interview-q%26a.md) |
 
 
