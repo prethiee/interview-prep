@@ -2,27 +2,25 @@
 
 ## 1. PHP Coding Fundamentals
 
-Before attempting coding exercises, remember these fundamentals:
-
-| Concept | Meaning |
-|---|---|
-| Variable | Stores a value |
-| Parameter | Variable declared in a function or method definition |
-| Argument | Actual value passed when calling a function |
-| Array | Stores multiple values |
-| Function | Reusable block of code |
-| Class | Blueprint for creating objects |
-| Object | Instance of a class |
-| Interface | Defines a contract that implementing classes must follow |
+| Concept        | Meaning                                                                    |
+| -------------- | -------------------------------------------------------------------------- |
+| Variable       | Stores a value                                                             |
+| Parameter      | Variable declared in a function or method definition                       |
+| Argument       | Actual value passed when calling a function                                |
+| Array          | Stores multiple values                                                     |
+| Function       | Reusable block of code                                                     |
+| Class          | Blueprint for creating objects                                             |
+| Object         | Instance of a class                                                        |
+| Interface      | Defines a contract that implementing classes must follow                   |
 | Abstract class | Cannot be instantiated directly; can contain abstract and concrete methods |
-| Trait | Reuses methods across multiple classes |
-| Inheritance | Allows a class to extend another class |
-| Encapsulation | Controls access to an object's internal data |
-| Polymorphism | Allows different implementations through a common interface or parent type |
+| Trait          | Reuses methods across multiple classes                                     |
+| Inheritance    | Allows a class to extend another class                                     |
+| Encapsulation  | Controls access to an object's internal data                               |
+| Polymorphism   | Allows different implementations through a common interface or parent type |
 
-### Example: Parameter vs argument
+### Parameter vs Argument
 
-```php
+```
 function greet($name) {
   return "Hello " . $name;
 }
@@ -37,11 +35,11 @@ greet("Preethi");
 
 ## 2. PHP Coding Exercises
 
-### Exercise 1: Reverse a string
+### Exercise 1: Reverse a String
 
 **Question:** Write a PHP function to reverse a string without using `strrev()`.
 
-```php
+```
 function reverseString(string $input): string {
   $reversed = '';
 
@@ -57,36 +55,13 @@ echo reverseString('Drupal');
 
 **Output:**
 
-```text
-lup arD
+```
+larpuD
 ```
 
-The actual output is `l urp`? No—the correct output is:
+### Exercise 2: Check Whether a String Is a Palindrome
 
-```text
-l urp
 ```
-
-For the input `Drupal`, the correct reversed string is `l urp` without a space: `l urp` is not the intended result. The exact output is:
-
-```text
-l urp
-```
-
-**Explanation:**
-- Start from the last character.
-- Move backwards through the string.
-- Append each character to the result.
-
-**Interview note:** This byte-based solution is suitable for basic ASCII strings. For Unicode text, use multibyte-aware functions such as `mb_strlen()` and `mb_substr()`.
-
-### Exercise 2: Check whether a string is a palindrome
-
-A palindrome reads the same forwards and backwards.
-
-Examples: `madam`, `level`, `radar`.
-
-```php
 function isPalindrome(string $input): bool {
   $input = strtolower($input);
 
@@ -98,42 +73,37 @@ var_dump(isPalindrome('Madam'));
 
 **Output:**
 
-```text
+```
 bool(true)
 ```
 
-**Explanation:**
-- Convert the string to lowercase.
-- Reverse the string.
-- Compare the original and reversed values.
+### Exercise 3: Find Duplicate Values in an Array
 
-### Exercise 3: Find duplicate values in an array
-
-**Question:** Find duplicate numbers in an array.
-
-```php
-function findDuplicates(array $numbers): array {
+```
+function findDuplicates($arr): array {
   $seen = [];
-  $duplicates = [];
+  $duplicate = [];
 
-  foreach ($numbers as $number) {
-    if (isset($seen[$number])) {
-      $duplicates[$number] = $number;
+  foreach ($arr as $val) {
+    if (in_array($val, $seen)) {
+      if (!in_array($val, $duplicate)) {
+        $duplicate[] = $val;
+      }
     }
     else {
-      $seen[$number] = true;
+      $seen[] = $val;
     }
   }
 
-  return array_values($duplicates);
+  return $duplicate;
 }
 
-print_r(findDuplicates([1, 2, 3, 2, 4, 5, 1]));
+print_r(findDuplicates([1, 2, 3, 2, 4, 1, 5]));
 ```
 
 **Output:**
 
-```text
+```
 Array
 (
     [0] => 2
@@ -141,65 +111,61 @@ Array
 )
 ```
 
-**Explanation:**
-- `$seen` stores values already encountered.
-- If a value exists in `$seen`, it is a duplicate.
-- `$duplicates` stores each duplicate only once.
+### Exercise 4: Find the Second-Largest Number
 
-### Exercise 4: Find the second-largest number
-
-```php
-function secondLargest(array $numbers): ?int {
-  $uniqueNumbers = array_values(array_unique($numbers));
-
-  rsort($uniqueNumbers);
-
-  return $uniqueNumbers[1] ?? NULL;
-}
-
-print_r(secondLargest([10, 20, 40, 30, 40]));
 ```
+function findSecondLargest($arr): ?int {
+  $arr = array_unique($arr);
 
-**Output:**
+  if (count($arr) < 2) {
+    return null;
+  }
 
-```text
-30
-```
+  $new_arr = [];
 
-**Explanation:**
-- Remove duplicate values.
-- Sort the array in descending order.
-- Return the second element.
-- Return `NULL` if there is no second distinct value.
-
-### Exercise 5: Count character frequency
-
-**Question:** Count how many times each character appears in a string.
-
-```php
-function characterFrequency(string $input): array {
-  $frequency = [];
-
-  for ($i = 0; $i < strlen($input); $i++) {
-    $character = $input[$i];
-
-    if (isset($frequency[$character])) {
-      $frequency[$character]++;
-    }
-    else {
-      $frequency[$character] = 1;
+  foreach ($arr as $val) {
+    if ($val != max($arr)) {
+      $new_arr[] = $val;
     }
   }
 
-  return $frequency;
+  return max($new_arr);
 }
 
-print_r(characterFrequency('hello'));
+echo findSecondLargest([10, 20, 40, 30, 40]);
 ```
 
 **Output:**
 
-```text
+```
+30
+```
+
+### Exercise 5: Count Character Frequency
+
+```
+function charAppearance($str): array {
+  $arr = str_split($str);
+  $new_arr = [];
+
+  foreach ($arr as $char) {
+    if (isset($new_arr[$char])) {
+      $new_arr[$char]++;
+    }
+    else {
+      $new_arr[$char] = 1;
+    }
+  }
+
+  return $new_arr;
+}
+
+print_r(charAppearance("hello"));
+```
+
+**Output:**
+
+```
 Array
 (
     [h] => 1
@@ -209,24 +175,19 @@ Array
 )
 ```
 
-**Explanation:**
-- Loop through each character.
-- Check whether it already exists in the frequency array.
-- Increment its count or initialize it to 1.
+### Exercise 6: Find the Largest Number in an Array
 
-### Exercise 6: Find the largest number in an array
-
-```php
-function findLargest(array $numbers): ?int {
-  if (empty($numbers)) {
-    return NULL;
+```
+function findLargest(array $arr): ?int {
+  if (empty($arr)) {
+    return null;
   }
 
-  $largest = $numbers[0];
+  $largest = $arr[0];
 
-  foreach ($numbers as $number) {
-    if ($number > $largest) {
-      $largest = $number;
+  foreach ($arr as $num) {
+    if ($num > $largest) {
+      $largest = $num;
     }
   }
 
@@ -238,13 +199,13 @@ echo findLargest([10, 25, 5, 40, 15]);
 
 **Output:**
 
-```text
+```
 40
 ```
 
-### Exercise 7: Remove duplicate values
+### Exercise 7: Remove Duplicate Values
 
-```php
+```
 function removeDuplicates(array $numbers): array {
   return array_values(array_unique($numbers));
 }
@@ -254,7 +215,7 @@ print_r(removeDuplicates([1, 2, 2, 3, 4, 4]));
 
 **Output:**
 
-```text
+```
 Array
 (
     [0] => 1
@@ -264,11 +225,9 @@ Array
 )
 ```
 
-### Exercise 8: Check whether a number is prime
+### Exercise 8: Check Whether a Number Is Prime
 
-A prime number is greater than 1 and divisible only by 1 and itself.
-
-```php
+```
 function isPrime(int $number): bool {
   if ($number < 2) {
     return FALSE;
@@ -288,20 +247,13 @@ var_dump(isPrime(7));
 
 **Output:**
 
-```text
+```
 bool(true)
 ```
 
-**Explanation:**
-- Numbers below 2 are not prime.
-- Check divisibility from 2 up to the square root.
-- If any number divides evenly, it is not prime.
+### Exercise 9: Find the Missing Number in a Sequence
 
-### Exercise 9: Find missing number in a sequence
-
-**Question:** An array contains numbers from 1 to N, but one number is missing. Find it.
-
-```php
+```
 function findMissingNumber(array $numbers, int $n): int {
   $expectedSum = ($n * ($n + 1)) / 2;
   $actualSum = array_sum($numbers);
@@ -314,25 +266,13 @@ echo findMissingNumber([1, 2, 4, 5], 5);
 
 **Output:**
 
-```text
+```
 3
 ```
 
-**Explanation:**
+### Exercise 10: Find the First Non-Repeating Character
 
-Sum of numbers from 1 to N:
-
-\[
-\frac{N(N+1)}{2}
-\]
-
-Subtract the actual array sum from the expected sum.
-
-**Assumption:** The array contains distinct values from 1 to N, with exactly one missing number.
-
-### Exercise 10: Find the first non-repeating character
-
-```php
+```
 function firstNonRepeatingCharacter(string $input): ?string {
   $frequency = [];
 
@@ -355,7 +295,7 @@ echo firstNonRepeatingCharacter('swiss');
 
 **Output:**
 
-```text
+```
 w
 ```
 
@@ -363,9 +303,9 @@ w
 
 ## 3. PHP OOP Coding Exercises
 
-### Exercise 11: Create a class and object
+### Exercise 11: Create a Class and Object
 
-```php
+```
 class Employee {
 
   public string $name;
@@ -387,19 +327,13 @@ echo $employee->getName();
 
 **Output:**
 
-```text
+```
 Preethi
 ```
 
-**Explanation:**
-- `Employee` is the class.
-- `$employee` is the object.
-- `__construct()` is the constructor.
-- `$this` refers to the current object.
+### Exercise 12: Demonstrate Inheritance
 
-### Exercise 12: Demonstrate inheritance
-
-```php
+```
 class Animal {
 
   public function makeSound(): string {
@@ -423,15 +357,13 @@ echo $dog->makeSound();
 
 **Output:**
 
-```text
+```
 Bark
 ```
 
-**Explanation:** The Dog class inherits from Animal and overrides its `makeSound()` method.
+### Exercise 13: Demonstrate an Interface
 
-### Exercise 13: Demonstrate an interface
-
-```php
+```
 interface PaymentInterface {
   public function pay(float $amount): string;
 }
@@ -449,11 +381,9 @@ $payment = new CreditCardPayment();
 echo $payment->pay(500);
 ```
 
-**Explanation:** The interface defines a contract. Any implementing class must provide the required method.
+### Exercise 14: Demonstrate Dependency Injection
 
-### Exercise 14: Demonstrate dependency injection
-
-```php
+```
 interface LoggerInterface {
   public function log(string $message): void;
 }
@@ -484,30 +414,23 @@ $order = new OrderService($logger);
 $order->createOrder();
 ```
 
-**Explanation:**
-- `OrderService` depends on `LoggerInterface`.
-- `FileLogger` is passed into the constructor.
-- This reduces tight coupling and makes testing easier.
-
 ---
 
 ## 4. Drupal Coding Exercises
 
-### Exercise 15: Create a custom Drupal service
+### Exercise 15: Create a Custom Drupal Service
 
-**Question:** Create a service that returns a greeting.
+**File:** `my_module.services.yml`
 
-File: `my_module.services.yml`
-
-```yaml
+```
 services:
   my_module.greeting:
     class: Drupal\my_module\Service\GreetingService
 ```
 
-File: `src/Service/GreetingService.php`
+**File:** `src/Service/GreetingService.php`
 
-```php
+```
 <?php
 
 namespace Drupal\my_module\Service;
@@ -521,20 +444,18 @@ class GreetingService {
 }
 ```
 
-Usage:
+**Usage:**
 
-```php
+```
 $greeting = \Drupal::service('my_module.greeting')
   ->getGreeting('Preethi');
 ```
 
-In production code, inject the service into the class that needs it.
+### Exercise 16: Inject a Service into a Controller
 
-### Exercise 16: Inject a service into a controller
+**File:** `src/Controller/GreetingController.php`
 
-File: `src/Controller/GreetingController.php`
-
-```php
+```
 <?php
 
 namespace Drupal\my_module\Controller;
@@ -564,15 +485,9 @@ class GreetingController extends ControllerBase {
 }
 ```
 
-**Explanation:**
-1. The service is registered in the services YAML file.
-2. The controller receives it through constructor injection.
-3. The static `create()` method retrieves the service from the container.
-4. The controller uses the injected service.
+### Exercise 17: Load a Drupal Node
 
-### Exercise 17: Load a Drupal node
-
-```php
+```
 $node = \Drupal::entityTypeManager()
   ->getStorage('node')
   ->load(1);
@@ -582,11 +497,9 @@ if ($node) {
 }
 ```
 
-**Interview note:** Prefer injecting `entity_type.manager` instead of using the global service locator in production classes.
+### Exercise 18: Create a Node Programmatically
 
-### Exercise 18: Create a node programmatically
-
-```php
+```
 $node = \Drupal\node\Entity\Node::create([
   'type' => 'article',
   'title' => 'My First Article',
@@ -596,17 +509,9 @@ $node = \Drupal\node\Entity\Node::create([
 $node->save();
 ```
 
-**Explanation:**
-- `type` specifies the content type.
-- `title` specifies the node title.
-- `status` determines whether the content is published.
-- `save()` persists the entity.
+### Exercise 19: Query Drupal Entities
 
-In production code, consider validation, access, ownership, revisions, and error handling.
-
-### Exercise 19: Query Drupal entities
-
-```php
+```
 $nids = \Drupal::entityQuery('node')
   ->accessCheck(TRUE)
   ->condition('type', 'article')
@@ -614,13 +519,11 @@ $nids = \Drupal::entityQuery('node')
   ->execute();
 ```
 
-This retrieves IDs of published article nodes that the current user is allowed to access.
+### Exercise 20: Create a Custom Route
 
-### Exercise 20: Create a custom route
+**File:** `my_module.routing.yml`
 
-File: `my_module.routing.yml`
-
-```yaml
+```
 my_module.hello:
   path: '/hello'
   defaults:
@@ -630,9 +533,9 @@ my_module.hello:
     _permission: 'access content'
 ```
 
-After changing route definitions, rebuild Drupal caches:
+Rebuild Drupal caches:
 
-```bash
+```
 drush cr
 ```
 
@@ -640,9 +543,10 @@ drush cr
 
 ## 5. Drupal Troubleshooting Scenarios
 
-### Scenario 1: A Drupal page returns a 500 Internal Server Error.
+### Scenario 1: A Drupal Page Returns a 500 Internal Server Error
 
 **Possible causes:**
+
 - PHP fatal error.
 - Missing service.
 - Invalid dependency injection.
@@ -651,6 +555,7 @@ drush cr
 - Incompatible module or PHP version.
 
 **Troubleshooting:**
+
 1. Check Drupal logs.
 2. Check PHP and web server logs.
 3. Review recent code deployments.
@@ -658,9 +563,10 @@ drush cr
 5. Check database connectivity.
 6. Reproduce the issue in a development environment.
 
-### Scenario 2: A custom route returns a 404 error.
+### Scenario 2: A Custom Route Returns a 404 Error
 
 **Possible causes:**
+
 - Incorrect route path.
 - Invalid YAML syntax.
 - Route not discovered.
@@ -669,16 +575,15 @@ drush cr
 
 **Troubleshooting:**
 
-```bash
+```
 drush cr
 drush router:debug
 ```
 
-Check that the route exists and that the controller class and method are correct.
-
-### Scenario 3: A custom service cannot be found.
+### Scenario 3: A Custom Service Cannot Be Found
 
 **Possible causes:**
+
 - Incorrect service ID.
 - Invalid services YAML.
 - Incorrect class namespace.
@@ -686,15 +591,17 @@ Check that the route exists and that the controller class and method are correct
 - Cache not rebuilt.
 
 **Troubleshooting:**
+
 - Verify `my_module.services.yml`.
 - Verify the service class namespace.
 - Verify the service ID used by the caller.
 - Run `drush cr`.
 - Inspect Drupal logs.
 
-### Scenario 4: A form is not submitting.
+### Scenario 4: A Form Is Not Submitting
 
 **Possible causes:**
+
 - Validation errors.
 - Incorrect submit handler.
 - Form API definition issue.
@@ -703,15 +610,17 @@ Check that the route exists and that the controller class and method are correct
 - Permission restrictions.
 
 **Troubleshooting:**
+
 - Inspect form validation errors.
 - Verify the submit handler.
 - Check the browser console.
 - Check Drupal logs.
 - Verify form structure and access requirements.
 
-### Scenario 5: A node is not appearing in a View.
+### Scenario 5: A Node Is Not Appearing in a View
 
 **Possible causes:**
+
 - Node is unpublished.
 - View filters exclude it.
 - Content type is incorrect.
@@ -720,15 +629,17 @@ Check that the route exists and that the controller class and method are correct
 - Cache is stale.
 
 **Troubleshooting:**
+
 - Verify the node's publication status.
 - Review View filters and relationships.
 - Check contextual filters.
 - Check user access.
 - Review View caching configuration.
 
-### Scenario 6: A Drupal page is slow.
+### Scenario 6: A Drupal Page Is Slow
 
 **Possible causes:**
+
 - Missing cache metadata.
 - Slow database queries.
 - N+1 entity loading.
@@ -737,6 +648,7 @@ Check that the route exists and that the controller class and method are correct
 - Large images or frontend assets.
 
 **Troubleshooting:**
+
 1. Measure response time.
 2. Inspect browser network activity.
 3. Review slow database queries.
@@ -744,9 +656,10 @@ Check that the route exists and that the controller class and method are correct
 5. Investigate external API calls.
 6. Optimize the actual bottleneck.
 
-### Scenario 7: A Twig template change is not visible.
+### Scenario 7: A Twig Template Change Is Not Visible
 
 **Possible causes:**
+
 - Wrong template name.
 - Incorrect template suggestion.
 - Template in the wrong theme directory.
@@ -755,15 +668,16 @@ Check that the route exists and that the controller class and method are correct
 
 **Troubleshooting:**
 
-```bash
+```
 drush cr
 ```
 
 Enable Twig debugging in development and inspect the template suggestions in the page source.
 
-### Scenario 8: A configuration change is missing after deployment.
+### Scenario 8: A Configuration Change Is Missing After Deployment
 
 **Possible causes:**
+
 - Configuration was not exported.
 - Configuration was not committed.
 - Configuration import was not performed.
@@ -772,7 +686,7 @@ Enable Twig debugging in development and inspect the template suggestions in the
 
 **Troubleshooting:**
 
-```bash
+```
 drush config:status
 drush config:export
 drush config:import
@@ -780,23 +694,26 @@ drush config:import
 
 Review configuration changes before importing them, particularly in production.
 
-### Scenario 9: A user can edit content they should not be able to edit.
+### Scenario 9: A User Can Edit Content They Should Not Be Able to Edit
 
 **Possible causes:**
+
 - Excessive role permissions.
 - Missing entity access checks.
 - Custom controller bypassing access checks.
 - Incorrect custom access handler.
 
 **Troubleshooting:**
+
 - Review role permissions.
 - Check entity access.
 - Check route access requirements.
 - Verify server-side authorization before performing updates.
 
-### Scenario 10: A deployment causes a fatal error.
+### Scenario 10: A Deployment Causes a Fatal Error
 
 **Possible causes:**
+
 - Missing Composer dependencies.
 - PHP version mismatch.
 - Missing database updates.
@@ -804,6 +721,7 @@ Review configuration changes before importing them, particularly in production.
 - Incorrect configuration deployment.
 
 **Troubleshooting:**
+
 1. Review deployment logs.
 2. Check Composer dependencies.
 3. Verify PHP compatibility.
@@ -817,50 +735,25 @@ Review configuration changes before importing them, particularly in production.
 
 When given a coding problem, follow this structure:
 
-**Step 1 – Understand the problem**
+1. **Understand the problem:** Clarify the input and expected output.
+2. **Identify edge cases:** Empty arrays, one element, duplicate values, negative numbers, NULL values, and unexpected input types.
+3. **Explain the approach:** Describe the logic before writing code.
+4. **Write clean code:** Use meaningful variable names, small functions, appropriate types, and consistent formatting.
+5. **Test the code:** Try normal input and edge cases.
+6. **Explain complexity:** Understand how the solution performs as the input grows.
 
-Clarify what the input and expected output should be.
+### Common Time Complexities
 
-**Step 2 – Identify edge cases**
-
-Examples:
-- Empty array.
-- One element.
-- Duplicate values.
-- Negative numbers.
-- Null values.
-- Unexpected input types.
-
-**Step 3 – Explain the approach**
-
-Before writing code, explain the logic in simple language.
-
-**Step 4 – Write clean code**
-
-Use:
-- Meaningful variable names.
-- Small functions.
-- Appropriate types.
-- Clear control structures.
-- Consistent formatting.
-
-**Step 5 – Test the code**
-
-Try normal input and edge cases.
-
-**Step 6 – Explain complexity**
-
-Common complexity levels:
-
-| Complexity | Meaning |
-|---|---|
-| O(1) | Constant time |
-| O(log n) | Logarithmic time |
-| O(n) | Linear time |
+| Complexity | Meaning           |
+| ---------- | ----------------- |
+| O(1)       | Constant time     |
+| O(log n)   | Logarithmic time  |
+| O(n)       | Linear time       |
 | O(n log n) | Linearithmic time |
-| O(n²) | Quadratic time |
+| O(n²)      | Quadratic time    |
 
 Examples:
+
 - One array traversal: O(n).
 - Two nested loops over the same array: typically O(n²).
 - Sorting: typically O(n log n).
@@ -871,11 +764,10 @@ Examples:
 
 ### Q1. What is the difference between `==` and `===` in PHP?
 
-`==` compares values after type conversion where applicable.
+- `==` compares values after type conversion where applicable.
+- `===` compares both value and data type.
 
-`===` compares both value and data type.
-
-```php
+```
 var_dump(5 == '5');  // true
 var_dump(5 === '5'); // false
 ```
@@ -887,16 +779,13 @@ var_dump(5 === '5'); // false
 
 ### Q3. What is the difference between `include` and `require`?
 
-Both include another PHP file.
-
 - `include` produces a warning if the file cannot be loaded and execution may continue.
 - `require` produces a fatal error if the file cannot be loaded.
 
 ### Q4. What is the difference between `array_merge()` and the `+` array operator?
 
-`array_merge()` combines arrays and renumbers numeric keys.
-
-The `+` operator uses array union: keys from the left array take precedence when keys overlap.
+- `array_merge()` combines arrays and renumbers numeric keys.
+- The `+` operator uses array union: keys from the left array take precedence when keys overlap.
 
 ### Q5. What is Composer?
 
@@ -910,9 +799,8 @@ Drupal uses PSR-4 autoloading for module and core classes.
 
 ### Q7. What is the difference between a service and a plugin in Drupal?
 
-A service is a reusable object managed by Drupal's service container.
-
-A plugin is a component discovered and managed by a plugin manager, usually implementing a specific Drupal extension point such as blocks, field formatters, or queue workers.
+- A service is a reusable object managed by Drupal's service container.
+- A plugin is a component discovered and managed by a plugin manager, usually implementing a specific Drupal extension point such as blocks, field formatters, or queue workers.
 
 ### Q8. Why is dependency injection important?
 
@@ -928,9 +816,8 @@ An event subscriber listens for dispatched events and executes code when those e
 
 ### Q11. What is the difference between a Drupal form and a controller?
 
-A controller handles a route request and returns a response or render array.
-
-A Form API class provides structured form building, validation, submission, and form-token handling.
+- A controller handles a route request and returns a response or render array.
+- A Form API class provides structured form building, validation, submission, and form-token handling.
 
 ### Q12. What is a queue worker?
 
@@ -951,53 +838,53 @@ A functional test checks application behavior through simulated HTTP requests an
 
 ---
 
-## 8. Coding Practice – Solve Without Looking at the Answers
+## 8. Coding Practice Checklist
 
-Try these exercises independently before checking your solutions.
+### PHP Exercises
 
-### PHP exercises
+- Reverse a string.
+- Check whether a string is a palindrome.
+- Find duplicate values in an array.
+- Find the second-largest distinct number.
+- Count character frequency.
+- Find the largest number.
+- Remove duplicate values.
+- Check whether a number is prime.
+- Find a missing number in a sequence.
+- Find the first non-repeating character.
 
-- [ ] Reverse a string.
-- [ ] Check whether a string is a palindrome.
-- [ ] Find duplicate values in an array.
-- [ ] Find the second-largest distinct number.
-- [ ] Count character frequency.
-- [ ] Find the largest number.
-- [ ] Remove duplicate values.
-- [ ] Check whether a number is prime.
-- [ ] Find a missing number in a sequence.
-- [ ] Find the first non-repeating character.
+### Drupal Exercises
 
-### Drupal exercises
-
-- [ ] Create a custom service.
-- [ ] Inject a service into a controller.
-- [ ] Load a node using Entity API.
-- [ ] Create a node programmatically.
-- [ ] Query published articles using EntityQuery.
-- [ ] Create a custom route.
-- [ ] Add permission requirements to a route.
-- [ ] Create a custom form with validation.
-- [ ] Create a custom block plugin.
-- [ ] Explain how you would troubleshoot a slow page.
+- Create a custom service.
+- Inject a service into a controller.
+- Load a node using Entity API.
+- Create a node programmatically.
+- Query published articles using EntityQuery.
+- Create a custom route.
+- Add permission requirements to a route.
+- Create a custom form with validation.
+- Create a custom block plugin.
+- Explain how you would troubleshoot a slow page.
 
 ---
 
 ## 9. Day 10 Completion Checklist
 
-- [ ] Write PHP array and string programs without assistance.
-- [ ] Explain the logic before coding.
-- [ ] Understand edge cases.
-- [ ] Explain time complexity.
-- [ ] Practise OOP concepts.
-- [ ] Write a custom Drupal service.
-- [ ] Implement constructor dependency injection.
-- [ ] Work with Drupal Entity API and EntityQuery.
-- [ ] Create and troubleshoot custom routes.
-- [ ] Understand Drupal logging and Drush debugging.
-- [ ] Troubleshoot forms, Views, services, and configuration.
-- [ ] Understand Drupal testing approaches.
-- [ ] Practise explaining production incidents.
+- Write PHP array and string programs without assistance.
+- Explain the logic before coding.
+- Understand edge cases.
+- Explain time complexity.
+- Practise OOP concepts.
+- Write a custom Drupal service.
+- Implement constructor dependency injection.
+- Work with Drupal Entity API and EntityQuery.
+- Create and troubleshoot custom routes.
+- Understand Drupal logging and Drush debugging.
+- Troubleshoot forms, Views, services, and configuration.
+- Understand Drupal testing approaches.
+- Practise explaining production incidents.
 
 **Day 10 objective:** Be comfortable solving basic PHP coding problems, writing practical Drupal code, and explaining how you investigate and resolve real-world Drupal issues.
 
+
+Add explanations below every solutionAdd unsolved practice questions first
