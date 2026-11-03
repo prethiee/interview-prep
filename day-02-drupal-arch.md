@@ -277,3 +277,291 @@ A structured PHP array describing output for Drupal's rendering system.
 - [ ] Explain services vs. Dependency Injection.
 - [ ] Describe render arrays and render caching.
 - [ ] Know when to use `vendor/bin/drush cr`.
+
+# Drupal Interview Revision – SOLID, Design Patterns & Architecture
+
+## 1. SOLID Principles
+
+### Q1. What is SOLID?
+
+SOLID is a set of five object-oriented programming principles that help developers write maintainable, reusable, flexible, and testable code.
+
+| Principle | Meaning |
+|---|---|
+| S – Single Responsibility | A class should have one responsibility. |
+| O – Open/Closed | Open for extension, closed for modification. |
+| L – Liskov Substitution | Child classes should be usable wherever the parent is expected. |
+| I – Interface Segregation | Prefer smaller, specific interfaces. |
+| D – Dependency Inversion | Depend on abstractions rather than concrete implementations. |
+
+### Q2. How does Drupal use SOLID principles?
+
+Drupal supports SOLID principles through its architecture:
+
+- Dependency injection supports Dependency Inversion.
+- Services help separate responsibilities.
+- Interfaces provide abstraction.
+- Plugins allow functionality to be extended through defined extension points.
+- Small, focused classes support Single Responsibility.
+
+### Q3. What is the Single Responsibility Principle?
+
+A class should have one responsibility and one main reason to change.
+
+Example: Separate email sending, payment processing, and user registration into different services.
+
+### Q4. What is the Open/Closed Principle?
+
+A class should be open for extension but closed for modification.
+
+Example: Drupal plugins allow developers to introduce new functionality without modifying existing plugin implementations.
+
+### Q5. What is the Liskov Substitution Principle?
+
+A child class should be usable wherever its parent class is expected without breaking the expected behaviour.
+
+### Q6. What is the Interface Segregation Principle?
+
+A class should not be forced to implement methods it does not need. Prefer smaller, focused interfaces.
+
+### Q7. What is the Dependency Inversion Principle?
+
+High-level classes should depend on abstractions rather than concrete implementations.
+
+Example: Depend on `LoggerInterface` rather than directly creating a specific logger implementation.
+
+---
+
+## 2. Design Patterns Used in Drupal
+
+### Q1. What are design patterns?
+
+Design patterns are reusable solutions to commonly occurring software design problems.
+
+They help improve code structure, maintainability, and reusability.
+
+### Q2. Which design patterns are used in Drupal?
+
+| Pattern | Drupal example |
+|---|---|
+| Dependency Injection | Constructor injection |
+| Factory | Controller creation through `create()` |
+| Plugin | Block and field formatter plugins |
+| Observer | Event subscribers |
+| Strategy | Different field formatter implementations |
+| Decorator | Service decoration |
+| Adapter | External API integration adapters |
+| Singleton-like shared instance | Shared services managed by the service container |
+
+### Q3. What is the Dependency Injection pattern?
+
+Dependencies are provided to a class rather than the class retrieving them directly.
+
+Example:
+
+```php
+public function __construct(LoggerInterface $logger) {
+  $this->logger = $logger;
+}
+```
+
+This improves loose coupling, testability, and maintainability.
+
+### Q4. What is the Factory pattern?
+
+A factory creates objects and hides the object creation process from the calling code.
+
+Drupal example: Controller creation through the static `create()` method.
+
+```php
+public static function create(ContainerInterface $container): static {
+  return new static(
+    $container->get('logger.factory')
+  );
+}
+```
+
+### Q5. What is the Plugin pattern?
+
+It allows developers to extend Drupal functionality through reusable components implementing specific extension points.
+
+Examples:
+- Block plugins.
+- Field formatter plugins.
+- Queue worker plugins.
+- Views plugins.
+
+### Q6. What is the Observer pattern?
+
+It allows one component to respond to events triggered by another component without tight coupling.
+
+Drupal example: Event subscribers.
+
+```php
+public static function getSubscribedEvents(): array {
+  return [
+    KernelEvents::REQUEST => ['onRequest'],
+  ];
+}
+```
+
+### Q7. What is the Strategy pattern?
+
+It allows different implementations of an operation to be selected depending on the requirement.
+
+Drupal example: Different field formatter plugins can render the same field in different ways.
+
+### Q8. What is the Decorator pattern?
+
+It allows developers to extend or modify an existing service's behaviour without changing its original implementation.
+
+Drupal example:
+
+```yaml
+services:
+  my_module.custom_logger:
+    class: Drupal\my_module\CustomLogger
+    decorates: logger.factory
+    arguments: ['@my_module.custom_logger.inner']
+```
+
+### Q9. What is the Adapter pattern?
+
+It allows two components with different interfaces to work together.
+
+Drupal example: An integration service that adapts an external API response into a structure expected by Drupal.
+
+### Q10. What is the Singleton pattern?
+
+It ensures that a class has only one shared instance.
+
+Drupal's service container generally manages services as shared instances by default, unless configured otherwise. This is similar to singleton behaviour, although the service container is not itself simply the Singleton pattern.
+
+---
+
+## 3. Drupal Architecture Questions
+
+### Q1. What is the Drupal service container?
+
+It is a dependency injection container responsible for managing and providing services.
+
+Services are registered in YAML files and can be injected into controllers, forms, and other classes.
+
+### Q2. What is the difference between a service and a plugin?
+
+- Service: A reusable PHP object managed by the service container.
+- Plugin: A reusable component implementing a particular extension point and managed by a plugin manager.
+
+### Q3. What is the difference between a hook and an event subscriber?
+
+- Hooks allow modules to interact with or alter Drupal functionality at predefined extension points.
+- Event subscribers listen for dispatched events and execute code when those events occur.
+
+### Q4. What is service decoration?
+
+Service decoration allows us to wrap an existing service and extend or modify its behaviour without changing the original service implementation.
+
+### Q5. What is autowiring?
+
+Autowiring automatically resolves and injects dependencies based on their types, reducing manual service configuration.
+
+It is supported by Symfony's dependency injection component, but should not be assumed to be automatically available for every Drupal service or class.
+
+### Q6. What is the difference between a factory and dependency injection?
+
+- Factory: Responsible for creating objects.
+- Dependency Injection: Provides the dependencies an object needs.
+
+A factory can use dependency injection to create an object.
+
+### Q7. What is loose coupling?
+
+Loose coupling means classes have minimal dependencies on specific implementations.
+
+It makes applications easier to maintain, test, and extend.
+
+### Q8. What is an interface in PHP?
+
+An interface defines a contract that implementing classes must follow.
+
+```php
+interface PaymentInterface {
+  public function pay(float $amount): void;
+}
+```
+
+### Q9. What is an abstract class?
+
+An abstract class cannot be instantiated directly. It can contain both abstract and concrete methods.
+
+### Q10. What is a trait?
+
+A trait allows methods to be reused across multiple classes without using inheritance.
+
+---
+
+## 4. Scenario-Based Interview Questions
+
+### Q1. You need to add new functionality without modifying an existing service. What would you use?
+
+I would consider service decoration if I need to extend an existing service, or a plugin if the functionality belongs to a plugin extension point.
+
+### Q2. Multiple classes need the same business logic. How would you handle it?
+
+I would move the common logic into a reusable service and inject it into the classes that need it.
+
+### Q3. An external API has a different response structure from your Drupal application. What would you do?
+
+I would create an adapter or integration service to transform the external response into the structure expected by Drupal.
+
+### Q4. You need to execute custom logic when a Drupal request event occurs. What would you use?
+
+I would implement an event subscriber and subscribe to the appropriate Symfony or Drupal event.
+
+### Q5. You need multiple implementations of the same functionality. What would you use?
+
+I would consider an interface with different implementations or a plugin architecture, depending on the use case.
+
+### Q6. How do you make Drupal code easier to test?
+
+- Use dependency injection.
+- Separate business logic into services.
+- Depend on interfaces where appropriate.
+- Avoid unnecessary static service calls.
+- Write unit, kernel, and functional tests as appropriate.
+
+---
+
+## 5. Quick Revision – Important Comparisons
+
+| Concepts | Key difference |
+|---|---|
+| Service vs Plugin | Reusable object vs extension component |
+| Hook vs Event Subscriber | Drupal extension hook vs event listener |
+| Factory vs DI | Creates objects vs supplies dependencies |
+| Interface vs Abstract Class | Contract vs partial implementation |
+| Trait vs Inheritance | Method reuse vs parent-child relationship |
+| Decorator vs Adapter | Extends behaviour vs translates interfaces |
+| Constructor vs Setter Injection | Dependency passed during creation vs afterwards |
+| Render Array vs Twig | Structured rendering definition vs presentation template |
+| Preprocess vs Hook Alter | Prepares template variables vs alters data at an extension point |
+
+---
+
+## 6. Interview Preparation Checklist
+
+- [ ] Explain all five SOLID principles.
+- [ ] Explain Dependency Injection with a PHP example.
+- [ ] Explain the Factory pattern.
+- [ ] Explain the Plugin pattern.
+- [ ] Explain the Observer pattern.
+- [ ] Explain the Strategy pattern.
+- [ ] Explain service decoration.
+- [ ] Explain the Adapter pattern.
+- [ ] Understand Drupal's service container.
+- [ ] Understand hooks and event subscribers.
+- [ ] Explain interfaces, abstract classes, and traits.
+- [ ] Give practical examples from enterprise Drupal projects.
+
+**Interview tip:** Don't just list design patterns. Explain the problem each pattern solves and give one example of how you've used it in a real Drupal project.
+
