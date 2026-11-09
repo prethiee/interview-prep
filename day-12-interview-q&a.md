@@ -280,739 +280,183 @@
 
 **Memory trick:** Drush = Drupal command line.
 
+
 ### MISC
-1. Caching: Varnish, Redis and Memcached
-Q1. What is Varnish, and how does it work with Drupal?
+Below is the complete document in Markdown, with numbered questions, bold formatting, properly boxed ASCII diagrams, arrows, decision branches, comparison tables and PHP/YAML code examples.
 
-Answer:
+Copy everything inside the code block into your `drupal-interview-preparation.md` file.
 
-Varnish is an HTTP reverse proxy cache that stores complete HTTP responses.
 
-When multiple users request the same page, Varnish can serve the cached response directly instead of sending every request to Drupal.
+# Drupal Interview Preparation
+## External API Integration, Caching, Performance and HTTP Lifecycle
 
-This reduces the load on the Drupal application and improves response time.
+**Interview Focus Areas:**
+- HTTP request and response lifecycle in Drupal
+- Custom HTTP responses
+- External API integration using Guzzle
+- Dependency injection and custom services
+- API authentication and error handling
+- Varnish, Redis and Memcached
+- Drupal caching mechanisms
+- Performance optimization and monitoring
+- Practical troubleshooting scenarios
 
-In Drupal, Varnish is integrated by:
+---
 
-Installing and configuring Varnish on the server.
+# 1. HTTP Request and Response Lifecycle in Drupal
 
-Configuring reverse proxy settings in settings.php.
+## Q1. Can you explain the complete lifecycle of an HTTP request and response in Drupal?
 
-Configuring Drupal cache headers and cache tags.
+**Answer:**
 
-Configuring Varnish to respect cache headers and invalidation.
+When a user sends an HTTP request from the browser, it first reaches the web server, such as Nginx or Apache.
 
-Q2. What is Redis, and how does Drupal use it?
+The web server forwards the request to the PHP runtime, which executes Drupal's `index.php`.
 
-Answer:
+Drupal bootstraps the application through the Drupal kernel. The routing system identifies the matching route based on the requested URL.
 
-Redis is an in-memory data store that Drupal can use for application-level caching.
-
-It stores frequently accessed data in memory, allowing Drupal to retrieve it quickly instead of repeatedly querying the database.
-
-In Drupal, Redis is integrated by:
-
-Installing Redis on the server.
-
-Installing and enabling the Drupal Redis module.
-
-Configuring the Redis connection in settings.php.
-
-Configuring Drupal cache bins to use Redis.
-
-Q3. What is Memcached, and how does Drupal use it?
-
-Answer:
-
-Memcached is an in-memory caching system that stores frequently accessed data in RAM.
-
-Drupal can use Memcached as a cache backend to reduce repeated database queries and improve application performance.
-
-In Drupal, Memcached is integrated by:
-
-Installing Memcached on the server.
-
-Installing and enabling the Drupal Memcache module.
-
-Configuring the Memcached server connection in settings.php.
-
-Configuring Drupal cache bins to use Memcached.
-
-Q4. What is the difference between Varnish, Redis and Memcached?
-
-Answer:
-
-Varnish, Redis and Memcached are caching technologies used to improve application performance, but they operate at different layers.
-
-Technology
-
-Purpose
-
-Caching layer
-
-Varnish
-
-Stores complete HTTP responses
-
-HTTP layer
-
-Redis
-
-Stores application data in memory
-
-Application layer
-
-Memcached
-
-Stores application data in memory
-
-Application layer
-
-Varnish reduces requests reaching Drupal by serving cached HTTP responses.
-
-Redis and Memcached reduce repeated data retrieval by storing frequently accessed application data in memory.
-
-They can be used together to improve overall application performance.
-
-Q5. What is a reverse proxy?
-
-Answer:
-
-A reverse proxy is a server that sits between the client and the backend application server.
-
-It receives incoming requests and forwards them to the appropriate backend server.
-
-It can also provide caching, security and load distribution.
-
-Varnish is an example of a reverse proxy.
-
-Q6. How do Varnish, Redis and Memcached fit into Drupal's architecture?
-
-Answer:
-
-They operate at different stages of request processing.
-
-Varnish can serve a cached HTTP response before the request reaches Drupal.
-
-Redis and Memcached store application-level cache data that Drupal can retrieve during request processing.
-
-If the required data is not cached, Drupal may retrieve it from the database.
-
-Diagram:
-
-              Browser
-                 |
-                 v
-              Varnish
-                 |
-          +------+------+
-          |             |
-       Cache Hit     Cache Miss
-          |             |
-          v             v
-       Response      Drupal
-                        |
-                   +----+----+
-                   |         |
-                 Redis    Database
-                /Memcached
-                   |
-                   v
-                Response
-2. HTTP Request Lifecycle in Drupal
-Q7. Can you explain the complete lifecycle of an HTTP request in Drupal?
-
-Answer:
-
-When a user sends an HTTP request from the browser, it first goes through DNS and the network to reach the server.
-
-Depending on the infrastructure, the request may pass through a CDN, load balancer or reverse proxy such as Varnish.
-
-The web server, such as Nginx or Apache, forwards the request to the PHP runtime, which executes Drupal's index.php.
-
-Drupal bootstraps the application, matches the request to a route, performs authentication and access checks, and invokes the appropriate controller.
+Drupal then performs authentication and access permission checks. If access is granted, the corresponding controller is invoked.
 
 The controller uses Drupal services to execute business logic and retrieve data from the cache, database or external APIs.
 
-Finally, Drupal generates an HTTP response, such as HTML or JSON, and sends it back to the browser.
+The controller returns a render array or a response object. Drupal processes the output and generates an HTTP response, such as HTML or JSON, which is sent back through the web server to the browser.
 
-Complete request flow:
+**HTTP Request and Response Flowchart:**
 
-Browser
-   |
-   v
-DNS / Network
-   |
-   v
-CDN / Load Balancer / Varnish
-   |
-   v
-Web Server (Nginx / Apache)
-   |
-   v
-PHP Runtime
-   |
-   v
-Drupal index.php
-   |
-   v
-Drupal Bootstrap
-   |
-   v
-Routing
-   |
-   v
-Authentication & Access Checks
-   |
-   v
-Controller
-   |
-   v
-Services / Business Logic
-   |
-   v
-Cache / Database / External APIs
-   |
-   v
-Response Generation
-   |
-   v
-Browser
-Q8. What is DNS, and what happens when a user enters a URL in the browser?
+```text
+┌──────────────────────────────────┐
+│ 1. Browser                       │
+│ User sends HTTP request          │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 2. Web Server                    │
+│ Nginx / Apache                   │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 3. PHP Runtime                   │
+│ Executes Drupal application      │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 4. index.php                     │
+│ Drupal entry point               │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 5. Drupal Bootstrap / Kernel     │
+│ Initializes Drupal               │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 6. Routing                       │
+│ Matches requested URL to route   │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 7. Authentication and            │
+│    Access Permission Checks      │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 8. Controller                    │
+│ Handles the request              │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 9. Services / Business Logic     │
+│ Executes application logic       │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 10. Data Retrieval               │
+│ Cache / Database / External API  │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 11. Response Generation          │
+│ Render Array / HTML / JSON       │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│ 12. HTTP Response                │
+│ Sent back to the browser         │
+└──────────────────────────────────┘
+````
+
+## Q2. What happens when a request reaches Drupal's index.php?
 
 Answer:
 
-DNS stands for Domain Name System. It translates a domain name into an IP address.
+`index.php` is the entry point for Drupal web requests.
 
-When a user enters a URL, the browser uses DNS to identify the server's IP address and then establishes a connection to send the HTTP request.
+It loads Composer's autoloader, creates the HTTP request object and initializes the Drupal application through the Drupal kernel.
 
-Q9. What is the role of Nginx or Apache in a Drupal application?
+The kernel bootstraps the application, processes the request and generates the appropriate HTTP response.
 
-Answer:
-
-Nginx and Apache are web servers that receive incoming HTTP requests and handle web server operations.
-
-For Drupal requests that require PHP execution, they forward the request to the PHP runtime, which executes Drupal's index.php.
-
-Q10. What happens when a request reaches Drupal's index.php?
+## Q3. What is the role of routing in Drupal?
 
 Answer:
 
-Drupal's index.php is the entry point for web requests.
+Routing maps an incoming URL and HTTP method to the appropriate controller or callback.
 
-It loads the Composer autoloader, creates the Drupal kernel, creates the HTTP request object and passes the request to the kernel for processing.
+Drupal identifies the matching route based on the requested URL and performs the required access checks before invoking the controller.
 
-The kernel handles the request and generates a response, which is then sent to the browser.
+Routes are generally defined in a module's `.routing.yml` file.
 
-Q11. Can you explain the Drupal request lifecycle, including routing, access checks, controllers and services?
-
-Answer:
-
-After Drupal bootstraps, its routing system identifies the route matching the requested URL.
-
-Drupal performs authentication and access checks to determine whether the user is allowed to access the resource.
-
-If access is granted, the corresponding controller is executed.
-
-The controller uses Drupal services to perform business logic and retrieve the required data.
-
-Finally, the controller returns a render array or a response object, which Drupal processes and sends to the client.
-
-Q12. What is the role of a controller in Drupal?
+## Q4. What is the role of a controller in Drupal?
 
 Answer:
 
 A controller handles a request for a particular route.
 
-It executes the required application logic, retrieves data using services and returns the output.
+It coordinates the required application logic, calls services to retrieve or process data, and returns the output.
 
-In Drupal, a controller typically returns a render array for an HTML page or a response object for other types of responses.
+A controller typically returns a render array for an HTML page or a Symfony Response object for custom responses.
 
-Q13. How does Drupal retrieve data from the database or cache during request processing?
+Business logic that needs to be reused should generally be implemented in services rather than placed entirely inside controllers.
 
-Answer:
-
-Drupal first attempts to retrieve previously cached data from its configured caching backend, such as Redis or Memcached.
-
-If the required data is not available in the cache, Drupal retrieves it from the database, processes it and may store it in the cache for future requests.
-
-Q14. How does Drupal generate and return an HTTP response?
+## Q5. What is the difference between a render array and a Response object in Drupal?
 
 Answer:
 
-After processing the request, Drupal generates an HTTP response.
+A render array is Drupal's structured representation of content that needs to be rendered into output, usually HTML.
 
-For a normal page request, the controller may return a render array, which Drupal's Render API converts into HTML.
+A Response object represents the actual HTTP response sent to the client. It contains the response body, HTTP status code and headers.
 
-For an API request, Drupal may return a JSON response.
+For normal Drupal page rendering, controllers commonly return render arrays.
 
-The response is passed back through the PHP runtime and web server to the browser.
+For custom responses, JSON output or redirects, controllers can return appropriate Symfony Response objects.
 
-Q15. What is the difference between an HTML response and a JSON response in Drupal?
+## Q6. What is an HTTP response, and how do you create a custom HTTP response in Drupal?
 
-Answer:
-
-An HTML response contains markup that the browser can render directly as a web page.
-
-A JSON response contains structured data that can be consumed by another application or frontend, such as React or Next.js.
-
-For example, Drupal can return HTML for a traditional website or JSON through JSON:API for a decoupled frontend.
-
-Q16. Does every HTTP request reach Drupal? Explain with an example of a Varnish cache hit.
-
-Answer:
-
-No, every request does not necessarily reach Drupal.
-
-When a user requests a page, Varnish first checks whether it has a valid cached response.
-
-Cache hit: Varnish returns the cached response directly to the browser without invoking Drupal.
-
-Cache miss: Varnish forwards the request to the backend, and Drupal processes it to generate the response.
-
-Flowchart:
-
-       User Request
-             |
-             v
-          Varnish
-             |
-             v
-      Cached response?
-          /       \
-        Yes        No
-         |          |
-         v          v
-    Return       Forward to
-    Response      Drupal
-         |          |
-         |          v
-         |       Process
-         |       Request
-         |          |
-         |          v
-         |       Generate
-         |       Response
-         |          |
-         |          v
-         |       Cache
-         |       Response
-         |          |
-         +-----+----+
-               |
-               v
-             Browser
-Q17. What is the difference between Varnish and Redis in the Drupal request lifecycle?
-
-Answer:
-
-Varnish is an HTTP reverse proxy cache that stores complete HTTP responses. It can serve cached pages without sending every request to Drupal.
-
-Redis is an in-memory data store that Drupal can use as a backend for application-level cache bins.
-
-The main difference is that Varnish works at the HTTP layer, whereas Redis works at the application caching layer.
-
-3. Quick Architecture Reference
-Q18. What are the responsibilities of the different components in a Drupal application?
-
-Answer:
-
-Component
-
-Responsibility
-
-DNS
-
-Resolves domain names into IP addresses
-
-CDN
-
-Distributes and potentially caches content closer to users
-
-Load Balancer
-
-Distributes incoming traffic across servers
-
-Varnish
-
-Caches HTTP responses
-
-Nginx / Apache
-
-Handles incoming web requests
-
-PHP
-
-Executes Drupal's PHP code
-
-index.php
-
-Entry point for Drupal web requests
-
-Routing
-
-Matches URLs to routes and controllers
-
-Controller
-
-Handles request-specific application logic
-
-Services
-
-Provide reusable application functionality
-
-Redis / Memcached
-
-Store application cache data in memory
-
-Database
-
-Stores persistent application data
-
-Render API
-
-Converts render arrays into output
-
-END OF NOTES
-
-These are the relevant questions from your supplied content. I've excluded the GitHub profile bio, repeated explanations, and mock-interview conversation. The diagrams are included where they help explain the architecture and request flow.
-
-ChatGPT, there was a question where they ask the life cycle of a HTTP response, and also HTTP custom response. In HTTP response, a request hits, then it goes into the index.php, then the routing and controller goes, taxes permission, all these things, that flowchart it was included there, right? Can you prepare a question for it and answer for it?
-Yes. The question you're referring to is about the Drupal HTTP Request Lifecycle, specifically how Drupal processes an incoming HTTP request and generates an HTTP response.
-
-Let's add it to your GitHub interview notes in a question-and-answer format.
-
-Q19. Explain the complete HTTP request and response lifecycle in Drupal.
-Answer:
-
-When a user sends an HTTP request from the browser, the request reaches the web server (Nginx or Apache), which forwards it to PHP.
-
-PHP executes Drupal's index.php, which acts as the entry point for Drupal.
-
-Drupal then bootstraps the application and passes the request to the Drupal kernel.
-
-The routing system identifies the matching route based on the requested URL. Drupal performs authentication and access permission checks to determine whether the user is allowed to access the requested resource.
-
-If access is granted, Drupal invokes the corresponding controller.
-
-The controller executes the required business logic, uses services to retrieve or process data, and returns a response.
-
-For a page request, the controller may return a render array, which Drupal's Render API converts into HTML. For an API request, it may return a JSON response.
-
-Finally, Drupal sends the HTTP response through PHP and the web server back to the browser.
-
-Flowchart:
-
-        Browser
-           |
-           | HTTP Request
-           v
-     Web Server
-    (Nginx / Apache)
-           |
-           v
-       PHP Runtime
-           |
-           v
-        index.php
-           |
-           v
-    Drupal Bootstrap
-           |
-           v
-     Drupal Kernel
-           |
-           v
-       Routing
-           |
-           v
-   Route Matching
-           |
-           v
- Authentication & 
-   Access Checks
-           |
-           v
-      Controller
-           |
-           v
- Services / Business
-        Logic
-           |
-           v
-   Data Retrieval
- (Cache / Database)
-           |
-           v
-  Response Generation
-           |
-           v
-      HTTP Response
-      (HTML / JSON)
-           |
-           v
-       Web Server
-           |
-           v
-        Browser
-Q20. What is an HTTP response in Drupal, and how do you create a custom HTTP response?
 Answer:
 
 An HTTP response is the output returned by the server to the client after processing an HTTP request.
 
-In Drupal, we can create custom HTTP responses using Symfony's Response classes.
+It generally contains three important components:
 
-For example, Drupal provides:
+1. Status code: Indicates the result of the request, such as 200, 404 or 500.
+2. Headers: Provide metadata about the response, such as Content-Type.
+3. Body: Contains the actual response content.
 
-Response – For returning a custom response.
+Drupal controllers can return Symfony Response objects to create custom HTTP responses.
 
-JsonResponse – For returning JSON data.
+Example: Custom HTTP Response
 
-RedirectResponse – For redirecting users to another URL.
-
-Example: Custom HTTP response in a controller
-
-use Symfony\Component\HttpFoundation\Response;
-
-public function customResponse() {
-  return new Response(
-    'Hello from Drupal!',
-    Response::HTTP_OK,
-    ['Content-Type' => 'text/plain']
-  );
-}
-
-Here:
-
-Hello from Drupal! is the response content.
-
-HTTP_OK represents the HTTP status code 200.
-
-Content-Type specifies that the response contains plain text.
-
-Q21. What is the difference between a render array and a Response object in Drupal?
-
-Answer:
-
-A render array is Drupal's structured way of defining content that needs to be rendered into HTML.
-
-A Response object represents the actual HTTP response sent to the client.
-
-For normal Drupal page rendering, controllers generally return render arrays. For custom responses, redirects or JSON output, we can return appropriate Response objects.
-
-Important distinction for interviews:
-
-HTTP request lifecycle = How Drupal receives and processes a request.
-
-HTTP response lifecycle = How Drupal generates and sends the response.
-
-Custom HTTP response = How we programmatically return a specific response using Symfony Response classes.
-
-These three concepts are related, but they are not the same interview question.
-
-The expert recommends focusing on the following topics during preparation for the call: external API, integration with Drupal, best practices, cache (Varnish, Redis, differences between them) + performance ( tools, best practices). Now can you prepare all the answers we discussed so far and along with the content that I gave now for the, like I have a mock interview at 4:30, a GitHub note of, like, question and answers with the flowchart and code block and everything included. Can you give it to me?
-
-I've prepared your GitHub-ready Drupal Interview Preparation Notes covering the topics discussed and the additional areas recommended by the interviewer.
-
-Drupal Interview Preparation
-
-Markdown · 47 interview questions · Code examples · Flowcharts
-
-Ready
-Download GitHub Markdown Notes
-
-What's included
-Section
-
-Coverage
-
-HTTP lifecycle
-
-Request, response, routing, controllers
-
-Custom responses
-
-Response, JsonResponse, RedirectResponse
-
-External APIs
-
-Guzzle, dependency injection, authentication
-
-API best practices
-
-Error handling, timeouts, caching, queues
-
-Caching
-
-Varnish, Redis, Memcached
-
-Drupal cache
-
-Bins, tags, contexts, max-age
-
-Performance
-
-Profiling, monitoring, database optimization
-
-Scenarios
-
-4 practical troubleshooting scenarios
-
-My recommendation before your 4:30 mock interview
-Don't try to memorize all 47 answers.
-
-Prioritize these five areas:
-
-External API integration using Guzzle and dependency injection.
-
-API error handling, authentication and best practices.
-
-Varnish versus Redis and Drupal caching.
-
-Cache tags, contexts and max-age.
-
-Performance troubleshooting and optimization tools.
-
-One important thing: Be prepared to explain an actual API integration you've worked on. Interviewers often move from theoretical questions to implementation details.
-
-You've got the notes. Now focus on being able to explain the concepts clearly rather than memorizing paragraphs.
-
-
-drupal_interview_prep_api_caching_performance.md
-Document
-Drupal Interview Preparation: APIs, Caching, Performance & HTTP Lifecycle
-Focus areas for the mock interview: external API integration with
-Drupal, integration best practices, Varnish and Redis, caching
-differences, performance tools and performance best practices.
-
-This note consolidates the topics discussed so far and adds practical
-interview-ready answers and examples for the newly identified focus
-areas. Examples use modern Drupal practices (Drupal 10/11-style
-service injection).
-
-1. HTTP Request and Response Lifecycle
-Q1. Explain the complete HTTP request and response lifecycle in Drupal.
-Answer:
-
-When a user sends an HTTP request from the browser, it reaches the web
-server, such as Nginx or Apache. The web server passes PHP requests to
-the PHP runtime, which executes Drupal's index.php.
-
-Drupal loads its application, creates the request and passes it to the
-Drupal kernel. The kernel bootstraps the application and the routing
-system matches the requested URL to a route.
-
-Drupal performs authentication and access checks. If access is allowed,
-the corresponding controller is called. The controller uses services to
-execute business logic and retrieve data from the cache, database or an
-external API.
-
-The controller returns a render array or a response object. Drupal
-prepares the final HTTP response and sends it through PHP and the web
-server to the browser.
-
-Flowchart:
-
-Browser
-   |
-   | HTTP request
-   v
-Web server (Nginx / Apache)
-   |
-   v
-PHP runtime
-   |
-   v
-Drupal entry point: index.php
-   |
-   v
-Drupal kernel / bootstrap
-   |
-   v
-Routing: match the URL to a route
-   |
-   v
-Authentication and access checks
-   |
-   v
-Controller
-   |
-   v
-Services / business logic
-   |
-   +----------+------------+
-   |          |            |
-   v          v            v
-  Cache    Database    External API
-   |          |            |
-   +----------+------------+
-              |
-              v
-       Render / response
-              |
-              v
-       HTTP response
-         (HTML / JSON)
-              |
-              v
-       Web server / PHP
-              |
-              v
-           Browser
-Remember: Infrastructure components such as a CDN, load balancer or
-Varnish may sit in front of the web server. A Varnish cache hit can be
-served without invoking Drupal.
-
-Q2. What happens when a request reaches Drupal's index.php?
-Answer:
-
-index.php is the entry point for Drupal web requests. It loads
-Composer's autoloader, creates the HTTP request and boots the Drupal
-application through the Drupal kernel. The kernel handles the request
-and produces an HTTP response.
-
-Q3. What is the role of routing in Drupal?
-Answer:
-
-Routing maps an incoming URL and HTTP method to the code that should
-handle the request. A route definition can specify a path, a controller,
-allowed methods, requirements and other route options. Drupal matches
-the request to the route and checks access before invoking the
-controller.
-
-Q4. What is the role of a controller in Drupal?
-Answer:
-
-A controller handles a request for a particular route. It coordinates
-the work needed for that request, usually by calling services, and
-returns a render array or a Symfony response object. Business logic that
-needs to be reused should generally live in services rather than being
-placed entirely in the controller.
-
-Q5. What is the difference between a render array and a Response object?
-Answer:
-
-A render array is Drupal's structured representation of content that
-Drupal's Render API can turn into output, commonly HTML. A Response
-object represents the HTTP response itself, including its content,
-status code and headers.
-
-For a normal Drupal page, a controller commonly returns a render array.
-For custom text, JSON or redirects, it can return an appropriate Symfony
-response object, such as Response, JsonResponse or
-RedirectResponse.
-
-Q6. What is an HTTP response, and how do you create a custom HTTP response in Drupal?
-Answer:
-
-An HTTP response is what the server sends back to the client after
-processing a request. It contains a status code, headers and a response
-body.
-
-Drupal controllers can return Symfony response objects.
-
-Example: custom plain-text response:
-
+```
 use Symfony\Component\HttpFoundation\Response;
 
 public function customResponse(): Response {
@@ -1022,15 +466,25 @@ public function customResponse(): Response {
     ['Content-Type' => 'text/plain']
   );
 }
-Here, the body is Hello from Drupal!, the status is 200 OK, and the
-Content-Type header identifies the body as plain text.
+```
 
-Q7. How do you return JSON from a Drupal controller?
+Explanation:
+
+- `Hello from Drupal!` is the response body.
+- `Response::HTTP_OK` represents HTTP status code 200.
+- `Content-Type` specifies that the response contains plain text.
+
+## Q7. How do you return JSON from a Drupal controller?
+
 Answer:
 
-Use Symfony's JsonResponse. It serializes the supplied data as JSON
-and sets the appropriate content type.
+We can use Symfony's `JsonResponse` class to return JSON data from a Drupal controller.
 
+It automatically converts the supplied data into JSON and sets the appropriate Content-Type header.
+
+Example:
+
+```
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 public function getData(): JsonResponse {
@@ -1039,123 +493,199 @@ public function getData(): JsonResponse {
     'message' => 'Data returned from Drupal',
   ];
 
-  return new JsonResponse($data, JsonResponse::HTTP_OK);
+  return new JsonResponse(
+    $data,
+    JsonResponse::HTTP_OK
+  );
 }
-Q8. What is the difference between an HTML response and a JSON response?
+```
+
+## Q8. What is the difference between an HTML response and a JSON response?
+
 Answer:
 
-An HTML response contains markup that a browser can render as a web
-page. A JSON response contains structured data that another application
-or frontend can consume. For example, a traditional Drupal site may
-return HTML, while a decoupled frontend such as React or Next.js may
-consume JSON from Drupal's JSON:API or a custom endpoint.
+An HTML response contains markup that the browser can render directly as a web page.
 
-Q9. Does every HTTP request reach Drupal?
+A JSON response contains structured data that can be consumed by another application or frontend.
+
+For example, a traditional Drupal website may return HTML, whereas a decoupled frontend built using React or Next.js may consume JSON through Drupal's JSON:API or a custom API endpoint.
+
+## Q9. Does every HTTP request reach Drupal?
+
 Answer:
 
-No. A reverse proxy or CDN may serve a cached response before the
-request reaches Drupal. For example, if Varnish has a valid cached
-response, it can return that response directly. If the response is not
-cached or is no longer valid, Varnish forwards the request to the
-backend.
+No. Every HTTP request does not necessarily reach Drupal.
 
-             Incoming request
-                    |
-                    v
-                 Varnish
-                    |
-             Is response cached?
-                /       \
-              Yes        No
-               |          |
-               v          v
-        Return cached   Forward to
-          response       Drupal
-               |          |
-               |          v
-               |      Process request
-               |          |
-               |          v
-               |      Generate response
-               |          |
-               +----+-----+
-                    |
-                    v
-                 Browser
-2. External API Integration with Drupal
-Q10. How do you integrate an external API with Drupal?
+A CDN or reverse proxy such as Varnish may serve a cached response before the request reaches Drupal.
+
+- Cache hit: Varnish finds a valid cached response and returns it directly to the browser.
+- Cache miss: Varnish forwards the request to the backend, where Drupal processes it and generates the response.
+
+Varnish Cache Hit and Cache Miss Flowchart:
+
+```
+          ┌───────────────────────┐
+          │ 1. Incoming Request   │
+          └───────────┬───────────┘
+                      │
+                      ▼
+          ┌───────────────────────┐
+          │ 2. Varnish Cache      │
+          └───────────┬───────────┘
+                      │
+                      ▼
+              ┌───────────────┐
+              │ 3. Cache Hit? │
+              └───────┬───────┘
+                      │
+                ┌─────┴─────┐
+                │           │
+               YES          NO
+                │           │
+                ▼           ▼
+       ┌──────────────┐  ┌────────────────┐
+       │ 4. Return    │  │ 5. Forward     │
+       │ Cached       │  │ Request to     │
+       │ Response     │  │ Drupal         │
+       └──────┬───────┘  └───────┬────────┘
+              │                  │
+              │                  ▼
+              │          ┌────────────────┐
+              │          │ 6. Drupal      │
+              │          │ Processes      │
+              │          │ Request        │
+              │          └───────┬────────┘
+              │                  │
+              │                  ▼
+              │          ┌────────────────┐
+              │          │ 7. Generate    │
+              │          │ Response       │
+              │          └───────┬────────┘
+              │                  │
+              │                  ▼
+              │          ┌────────────────┐
+              │          │ 8. Cache       │
+              │          │ Response       │
+              │          │ If Cacheable   │
+              │          └───────┬────────┘
+              │                  │
+              └────────┬─────────┘
+                       │
+                       ▼
+             ┌───────────────────┐
+             │ 9. Return Response│
+             │    to Browser     │
+             └───────────────────┘
+```
+
+# 2. External API Integration with Drupal
+
+## Q10. How do you integrate an external API with Drupal?
+
 Answer:
 
-I would generally use Drupal's HTTP Client service, which is based on
-Guzzle, to communicate with the external API.
+I generally use Drupal's HTTP Client service, which is based on Guzzle, to communicate with external APIs.
 
-I would create a custom Drupal service responsible for making the API
-request, handling the response and exposing the required data to the
-rest of the application. I would inject that service into a controller,
-form or other service rather than making HTTP calls directly from a
-controller or a hook.
+I create a custom Drupal service responsible for making API requests, handling responses and processing the returned data.
 
-The integration typically involves:
+I then inject that service into the controller or other components that require the API data.
 
-Understand the API documentation, authentication method, endpoints,
-request parameters and response format.
-Configure the base URL and credentials securely.
-Use dependency injection to access Drupal's HTTP Client.
-Make the request with an appropriate HTTP method, headers, query
-parameters or request body.
-Handle the response and decode JSON when applicable.
-Handle HTTP errors, network failures and timeouts.
-Validate and map the external data into the format Drupal needs.
-Cache data when appropriate to avoid unnecessary API calls.
-Log useful diagnostic information without exposing secrets or
-sensitive data.
-Typical architecture:
+The general integration process involves:
 
-Drupal Controller / Form
-          |
-          v
-   Custom API Service
-          |
-          v
- Drupal HTTP Client
-       (Guzzle)
-          |
-          v
-    External API
-          |
-          v
- HTTP Response (JSON)
-          |
-          v
- Validate / Decode / Map
-          |
-          v
- Return data to Drupal
-Q11. What is Guzzle, and how is it used in Drupal?
+1. Understanding the external API documentation, endpoints and authentication mechanism.
+2. Configuring the API base URL and credentials securely.
+3. Using Drupal's HTTP Client service through dependency injection.
+4. Making HTTP requests using appropriate methods such as GET, POST, PUT or DELETE.
+5. Processing the API response, usually JSON.
+6. Handling HTTP errors, network failures and timeouts.
+7. Validating and mapping the external data.
+8. Caching API responses where appropriate.
+9. Logging errors without exposing sensitive information.
+
+External API Integration Flowchart:
+
+```
+┌────────────────────────────────┐
+│ 1. Drupal Controller / Form     │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 2. Custom API Service           │
+│ Contains API integration logic │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 3. Drupal HTTP Client           │
+│ Guzzle                         │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 4. External API                 │
+│ Sends requested data            │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 5. HTTP Response                │
+│ JSON / Status Code / Headers    │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 6. Validate and Decode JSON     │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 7. Map / Process Data           │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 8. Return Data to Drupal        │
+└───────────────┬────────────────┘
+                │
+                ▼
+┌────────────────────────────────┐
+│ 9. Display or Store Data        │
+└────────────────────────────────┘
+```
+
+## Q11. What is Guzzle, and how is it used in Drupal?
+
 Answer:
 
-Guzzle is a PHP HTTP client library used to send HTTP requests to
-external services. Drupal provides an HTTP Client service built on
-Guzzle, so we can make API calls using dependency injection.
+Guzzle is a PHP HTTP client library used to send HTTP requests to external services.
 
-For example, we can use the client to send GET, POST, PUT or DELETE
-requests and receive an HTTP response.
+Drupal provides an HTTP Client service built on Guzzle, which allows developers to communicate with external APIs using dependency injection.
 
-Q12. How do you use Drupal's HTTP Client service in a custom service?
+We can use it to send GET, POST, PUT, PATCH and DELETE requests and process the responses.
+
+## Q12. How do you use Drupal's HTTP Client service in a custom service?
+
 Answer:
 
-Inject the http_client service into the constructor of a custom
-service. This keeps the code testable and avoids creating the HTTP
-client manually.
+We inject Drupal's `http_client` service into the constructor of our custom service.
 
-Service definition --- mymodule.services.yml:
+This allows us to make HTTP requests without manually creating the HTTP client.
 
+Step 1: Define the service in `mymodule.services.yml`.
+
+```
 services:
   mymodule.external_api:
     class: Drupal\mymodule\Service\ExternalApiService
     arguments: ['@http_client']
-Service class --- src/Service/ExternalApiService.php:
+```
 
+Step 2: Create the service class.
+
+File: `src/Service/ExternalApiService.php`
+
+```
 <?php
 
 namespace Drupal\mymodule\Service;
@@ -1164,11 +694,14 @@ use GuzzleHttp\ClientInterface;
 
 class ExternalApiService {
 
-  public function __construct(
-    protected ClientInterface $httpClient,
-  ) {}
+  protected ClientInterface $httpClient;
+
+  public function __construct(ClientInterface $http_client) {
+    $this->httpClient = $http_client;
+  }
 
   public function fetchData(): array {
+
     $response = $this->httpClient->request(
       'GET',
       'https://api.example.com/items',
@@ -1191,16 +724,30 @@ class ExternalApiService {
   }
 
 }
-https://api.example.com/items is a placeholder. Replace it with the
-real endpoint. In production, configure the endpoint rather than
-hardcoding environment-specific values.
+```
 
-Q13. How do you call your custom API service from a controller?
+Explanation:
+
+- `http_client` is Drupal's HTTP Client service.
+- `request()` sends the HTTP request.
+- `GET` specifies the HTTP method.
+- `headers` specifies the request headers.
+- `timeout` limits how long the request can take.
+- `json_decode()` converts the JSON response into a PHP array.
+
+The example endpoint is a placeholder and should be replaced with the actual API endpoint.
+
+## Q13. How do you call your custom API service from a controller?
+
 Answer:
 
-Inject the custom service into the controller through its constructor.
-Then call the service method from the controller.
+We inject our custom API service into the controller using dependency injection.
 
+The controller calls the service method to retrieve the external API data.
+
+Example:
+
+```
 <?php
 
 namespace Drupal\mymodule\Controller;
@@ -1211,9 +758,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ApiController extends ControllerBase {
 
-  public function __construct(
-    protected ExternalApiService $externalApi,
-  ) {}
+  protected ExternalApiService $externalApi;
+
+  public function __construct(ExternalApiService $external_api) {
+    $this->externalApi = $external_api;
+  }
 
   public static function create(ContainerInterface $container): static {
     return new static(
@@ -1222,6 +771,7 @@ class ApiController extends ControllerBase {
   }
 
   public function showData(): array {
+
     $data = $this->externalApi->fetchData();
 
     return [
@@ -1234,39 +784,46 @@ class ApiController extends ControllerBase {
   }
 
 }
-The controller delegates the API communication to the service. This
-separation makes the integration easier to maintain and test.
+```
 
-Q14. Which HTTP methods are commonly used when integrating APIs?
+The controller delegates API communication to the custom service.
+
+This separation improves code reusability, maintainability and testability.
+
+## Q14. Which HTTP methods are commonly used when integrating APIs?
+
 Answer:
 
-GET retrieves data.
-POST creates a resource or submits data for processing.
-PUT generally replaces or updates a resource.
-PATCH partially updates a resource.
-DELETE removes a resource.
-The exact behavior depends on the API's contract and documentation.
+| HTTP Method | Purpose                            |
+| ----------- | ---------------------------------- |
+| GET         | Retrieves data                     |
+| POST        | Creates a resource or submits data |
+| PUT         | Replaces or updates a resource     |
+| PATCH       | Partially updates a resource       |
+| DELETE      | Deletes a resource                 |
 
-Q15. How do you handle authentication when integrating an external API?
+The exact behavior depends on the external API's documentation and implementation.
+
+## Q15. How do you handle authentication when integrating an external API?
+
 Answer:
 
-It depends on the authentication mechanism supported by the external
-API.
+The authentication mechanism depends on what the external API supports.
 
-Common approaches include:
+Common authentication methods include:
 
-API key: send the key in the header or in the way specified by the
-API.
-Basic authentication: send a username and password over HTTPS.
-Bearer token: send an access token in the Authorization header.
-OAuth 2.0: obtain and refresh access tokens according to the
-provider's flow.
-Credentials and tokens should be stored securely, not hardcoded in
-source code or committed to Git. HTTPS should be used for API
-communication.
+- API Key: A key is sent in the request header or as specified by the API.
+- Basic Authentication: A username and password are sent using HTTP authentication over HTTPS.
+- Bearer Token: An access token is sent through the Authorization header.
+- OAuth 2.0: Access tokens are obtained and refreshed through an authorization flow.
 
-Example: bearer token:
+Credentials and tokens should be stored securely and should never be hardcoded in source code or committed to Git.
 
+HTTPS should always be used for API communication.
+
+Example: Bearer Token Authentication
+
+```
 $response = $this->httpClient->request(
   'GET',
   $endpoint,
@@ -1278,34 +835,35 @@ $response = $this->httpClient->request(
     'timeout' => 10,
   ]
 );
-Q16. How do you handle errors when an external API fails?
+```
+
+## Q16. How do you handle errors when an external API fails?
+
 Answer:
 
-I would handle API failures gracefully so that an external service
-problem does not cause an uncontrolled failure in the Drupal
-application.
+I handle API failures gracefully to ensure that an external service problem does not cause an uncontrolled failure in the Drupal application.
 
-I would consider:
+I consider the following scenarios:
 
-HTTP status codes such as 400, 401, 403, 404, 429 and 500.
-Connection failures and DNS errors.
-Request timeouts.
-Invalid or unexpected JSON responses.
-Expired or invalid authentication tokens.
-I would catch the relevant exceptions, log useful diagnostic details,
-and return a controlled result or display an appropriate message. I
-would avoid logging credentials, tokens or sensitive response data.
+- HTTP errors such as 400, 401, 403, 404, 429 and 500.
+- Connection failures and DNS errors.
+- Request timeouts.
+- Invalid or unexpected JSON responses.
+- Expired or invalid authentication tokens.
 
-Guzzle normally throws exceptions for unsuccessful HTTP responses unless
-configured otherwise. The code should handle those exceptions
-deliberately.
+I catch the relevant exceptions, log useful diagnostic information and return a controlled result or appropriate error message.
+
+I also avoid logging API credentials, access tokens or sensitive response data.
 
 Example:
 
+```
 use GuzzleHttp\Exception\GuzzleException;
 
 public function fetchData(): array {
+
   try {
+
     $response = $this->httpClient->request(
       'GET',
       'https://api.example.com/items',
@@ -1322,186 +880,227 @@ public function fetchData(): array {
     );
 
     return is_array($data) ? $data : [];
+
   }
   catch (GuzzleException $e) {
-    // Log the failure without exposing credentials.
+
     \Drupal::logger('mymodule')->error(
       'External API request failed: @message',
       ['@message' => $e->getMessage()]
     );
 
     return [];
+
   }
   catch (\JsonException $e) {
+
     \Drupal::logger('mymodule')->error(
       'External API returned invalid JSON.'
     );
 
     return [];
+
   }
+
 }
-In production code, inject Drupal's logger service as well, rather
-than using the static \Drupal::logger() call. This example keeps the
-error-handling idea visible in a compact snippet.
+```
 
-Q17. What are the best practices for external API integration in Drupal?
+Note: In production, inject Drupal's logger service rather than using the static `\Drupal::logger()` call.
+
+## Q17. What are the best practices for external API integration in Drupal?
+
 Answer:
 
-Use Drupal's HTTP Client service and dependency injection.
-Keep API communication in a dedicated custom service.
-Store credentials securely and use HTTPS.
-Set connection and request timeouts.
-Handle HTTP errors, exceptions and invalid responses.
-Validate external data before using or saving it.
-Cache responses when the data does not need to be refreshed on every
-request.
-Use pagination for large API responses.
-Respect API rate limits and handle HTTP 429 responses.
-Log failures without exposing secrets or personal data.
-Write unit or kernel tests using mocked HTTP responses.
-Consider queues or background processing for slow or large
-integrations.
-Q18. How would you improve the performance of an external API integration?
+The important best practices are:
+
+1. Use Drupal's HTTP Client service.
+2. Use dependency injection.
+3. Keep API communication in a dedicated custom service.
+4. Store API credentials securely.
+5. Use HTTPS.
+6. Configure appropriate connection and request timeouts.
+7. Handle exceptions and HTTP status codes.
+8. Validate external API responses.
+9. Cache responses where appropriate.
+10. Use pagination for large datasets.
+11. Respect API rate limits.
+12. Log errors without exposing sensitive information.
+13. Write tests using mocked HTTP responses.
+14. Use Drupal's Queue API for long-running or bulk operations.
+
+## Q18. How would you improve the performance of an external API integration?
+
 Answer:
 
-I would avoid making the same API request repeatedly. I would cache
-responses when appropriate, set timeouts, request only the required
-data, and use pagination for large datasets.
+I would avoid making the same API request repeatedly.
 
-For long-running or bulk operations, I would consider Drupal's Queue API
-or a background process instead of making users wait for the entire
-operation during a page request.
+I would cache API responses when the data does not need to be real-time, configure appropriate timeouts and request only the required data.
+
+For large datasets, I would use pagination.
+
+For long-running operations, I would consider Drupal's Queue API or background processing instead of making users wait for the entire operation during a page request.
 
 I would also monitor API response times, failures and rate limits.
 
-3. Caching in Drupal
-Q19. What is caching, and why is it important in Drupal?
+# 3. Caching in Drupal
+
+## Q19. What is caching, and why is it important in Drupal?
+
 Answer:
 
-Caching means temporarily storing data or a generated response so that
-it can be reused instead of being generated or retrieved repeatedly.
+Caching means temporarily storing data or generated responses so they can be reused instead of being generated or retrieved repeatedly.
 
-Drupal uses caching to reduce database queries, avoid repeated
-processing and improve page response times.
+Drupal uses caching to:
 
-Caching can happen at different levels, including the browser, CDN,
-reverse proxy, Drupal application and database infrastructure.
+- Reduce repeated database queries.
+- Avoid unnecessary application processing.
+- Improve page response times.
+- Reduce server load.
+- Improve scalability.
 
-Q20. What is Varnish, and how does it work with Drupal?
+Caching can happen at different levels, including the browser, CDN, reverse proxy, Drupal application and database infrastructure.
+
+## Q20. What is Varnish, and how does it work with Drupal?
+
 Answer:
 
-Varnish is an HTTP reverse proxy cache. It sits in front of the web
-server and caches complete HTTP responses.
+Varnish is an HTTP reverse proxy cache that sits in front of the web server and caches complete HTTP responses.
 
-When a user requests a page, Varnish checks whether a valid cached
-response exists. If it does, Varnish serves the response directly
-without sending the request to Drupal. Otherwise, it forwards the
-request to the backend.
+When a user requests a page, Varnish checks whether a valid cached response exists.
 
-In a Drupal setup, Varnish is installed and configured at the
-infrastructure level. Drupal's reverse proxy settings and cache headers
-must also be configured correctly so that Varnish can cache and
-invalidate responses appropriately.
+If it does, Varnish serves the response directly without sending the request to Drupal.
 
-Q21. What is Redis, and how does Drupal use it?
+If the response is not available in the cache, Varnish forwards the request to the backend, where Drupal processes it.
+
+In Drupal, Varnish is integrated through infrastructure configuration and Drupal's reverse proxy and cache header settings.
+
+## Q21. What is Redis, and how does Drupal use it?
+
 Answer:
 
-Redis is an in-memory data store that Drupal can use as an
-application-level cache backend.
+Redis is an in-memory data store that Drupal can use as an application-level caching backend.
 
-It stores frequently accessed cache data in memory, reducing the need to
-retrieve the same data repeatedly from the database.
+It stores frequently accessed data in memory, allowing Drupal to retrieve it quickly instead of repeatedly querying the database.
 
-Redis must be installed and configured on the server. Drupal's Redis
-integration is then configured to connect to it and use it for the
-appropriate cache bins.
+Redis needs to be installed and configured on the server. Drupal's Redis integration is then configured to connect to it and use it for the appropriate cache bins.
 
-Q22. What is Memcached, and how does Drupal use it?
+## Q22. What is Memcached, and how does Drupal use it?
+
 Answer:
 
-Memcached is an in-memory caching system. Drupal can use it as a cache
-backend to store frequently accessed application data in RAM.
+Memcached is an in-memory caching system that stores frequently accessed data in RAM.
 
-It reduces repeated database access and can improve performance. The
-Memcached service must be installed and configured on the server, and
-Drupal's Memcache integration must be configured to use it.
+Drupal can use Memcached as a cache backend to reduce repeated database access and improve application performance.
 
-Q23. What is the difference between Varnish, Redis and Memcached?
+The Memcached service must be installed on the server, and Drupal's Memcache integration must be configured to use it.
+
+## Q23. What is the difference between Varnish, Redis and Memcached?
+
 Answer:
 
-Technology What it stores Layer Main purpose
+| Feature            | Varnish                         | Redis                                              | Memcached                    |
+| ------------------ | ------------------------------- | -------------------------------------------------- | ---------------------------- |
+| Type               | Reverse proxy cache             | In-memory data store                               | In-memory cache              |
+| Layer              | HTTP layer                      | Application / data layer                           | Application layer            |
+| Stores             | Complete HTTP responses         | Key-value data and other supported data structures | Key-value data               |
+| Main purpose       | Reduce requests reaching Drupal | Fast application data access                       | Fast application data access |
+| Drupal integration | Reverse proxy configuration     | Redis integration                                  | Memcache integration         |
 
-Varnish Complete HTTP HTTP / reverse Serve cached
-responses proxy responses before
-Drupal
+Interview explanation:
 
-Redis Application cache Application / Fast in-memory
-data and other data store data access
-supported data
-structures
+Varnish works at the HTTP layer and caches complete HTTP responses. It can serve cached pages without sending requests to Drupal.
 
-Memcached Application cache Application cache Fast temporary
-data as key-value data access
-entries
-Varnish works in front of Drupal and can serve a complete cached
-response without invoking the application.
+Redis and Memcached work at the application caching layer. They store frequently accessed data in memory and reduce repeated database operations.
 
-Redis and Memcached are used by the application to store and retrieve
-cache data. They can reduce repeated database operations.
+They can be used together to improve application performance.
 
-Q24. What is a reverse proxy?
+## Q24. What is a reverse proxy?
+
 Answer:
 
-A reverse proxy is a server that sits in front of backend application
-servers. It receives requests from clients and forwards them to the
-appropriate backend.
+A reverse proxy is a server that sits between the client and the backend application server.
 
-It can also provide caching, security controls and traffic distribution.
+It receives incoming requests and forwards them to the appropriate backend server.
+
+It can also provide caching, security and traffic distribution.
+
 Varnish is an example of a reverse proxy.
 
-Q25. How do you configure Varnish, Redis and Memcached with Drupal?
+## Q25. How do you configure Varnish, Redis and Memcached with Drupal?
+
 Answer:
 
-They require both infrastructure-level setup and Drupal-side
-configuration.
+They require both infrastructure-level setup and Drupal-side configuration.
 
-Varnish: Install and configure Varnish on the server, configure
-Drupal's reverse proxy settings in settings.php, and ensure cache
-headers and invalidation are handled correctly.
-Redis: Install Redis, enable the Drupal Redis integration,
-configure the connection in settings.php and configure the
-required cache bins.
-Memcached: Install Memcached, enable the Drupal Memcache
-integration, configure the server connection and configure Drupal
-cache bins to use it.
-Installing a Drupal module alone is not enough. The corresponding server
-service must also be installed, running and reachable.
+Varnish:
 
-Q26. What are cache bins in Drupal?
+1. Install and configure Varnish on the server.
+2. Configure Drupal's reverse proxy settings in `settings.php`.
+3. Configure cache headers and cache tags.
+4. Ensure Varnish handles cache invalidation correctly.
+
+Redis:
+
+1. Install Redis on the server.
+2. Install and enable Drupal's Redis integration.
+3. Configure the Redis connection in `settings.php`.
+4. Configure the required Drupal cache bins.
+
+Memcached:
+
+1. Install Memcached on the server.
+2. Install and enable Drupal's Memcache integration.
+3. Configure the Memcached server connection.
+4. Configure Drupal cache bins to use Memcached.
+
+Important: Installing a Drupal module alone is not sufficient. The corresponding server service must also be installed, running and reachable.
+
+## Q26. What are cache bins in Drupal?
+
 Answer:
 
-Cache bins are logical collections of cached data in Drupal. Different
-types of cached data are stored in different bins.
+Cache bins are logical collections of cached data in Drupal.
 
-For example, Drupal has bins for data such as render output, dynamic
-page cache, discovery information and data. Cache bins use a cache
-backend to store and retrieve cached items.
+Different types of cached information are stored in different bins.
 
-Q27. What are cache tags, cache contexts and cache max-age?
+For example, Drupal has cache bins for render output, dynamic page cache, discovery information and general application data.
+
+Each cache bin uses a configured cache backend to store and retrieve cached items.
+
+## Q27. What are cache tags, cache contexts and cache max-age?
+
 Answer:
 
-These are three important parts of Drupal's cache metadata.
+These are three important concepts in Drupal's cache metadata system.
 
-Cache tags: Identify the data a cached item depends on. When
-that data changes, the related cache can be invalidated. For
-example, node:10 can identify a dependency on node 10.
-Cache contexts: Vary the cached output based on a request
-context, such as user permissions, language or URL query arguments.
-Cache max-age: Defines how long the cached item can remain
-valid, in seconds. A max-age of 0 means the item should not be
-cached.
+1\. Cache Tags
+
+Cache tags identify the data that a cached item depends on.
+
+When the underlying data changes, Drupal can invalidate the related cached items using their tags.
+
+For example, `node:10` identifies a dependency on node 10.
+
+2\. Cache Contexts
+
+Cache contexts determine when cached output should vary based on request context.
+
+Examples include:
+
+- User permissions.
+- Current language.
+- URL query arguments.
+- User identity.
+
+3\. Cache Max-Age
+
+Cache max-age defines how long a cached item remains valid, in seconds.
+
+A max-age of `0` means the item should not be cached.
+
 Example:
 
+```
 return [
   '#markup' => 'Welcome!',
   '#cache' => [
@@ -1510,309 +1109,320 @@ return [
     'max-age' => 3600,
   ],
 ];
-This example declares a dependency on node 10, varies the output by user
-permissions and sets a maximum cache age of one hour.
+```
 
-Q28. What is the difference between cache invalidation and cache expiration?
+In this example:
+
+- `node:10` identifies the content dependency.
+- `user.permissions` varies the output based on permissions.
+- `3600` means the cache is valid for one hour.
+
+## Q28. What is the difference between cache invalidation and cache expiration?
+
 Answer:
 
-Cache invalidation means marking cached data as no longer valid because
-something it depends on has changed. Drupal commonly uses cache tags for
-targeted invalidation.
+Cache invalidation means marking cached data as no longer valid because the underlying data has changed.
 
-Cache expiration means cached data becomes invalid after a defined
-period, often controlled by max-age or a backend's expiration settings.
+Drupal commonly uses cache tags to invalidate related cached items.
 
-Q29. What is the difference between Internal Page Cache and Dynamic Page Cache in Drupal?
+Cache expiration means cached data becomes invalid after a defined period, usually controlled by max-age or the cache backend's expiration settings.
+
+## Q29. What is the difference between Internal Page Cache and Dynamic Page Cache in Drupal?
+
 Answer:
 
-Internal Page Cache is primarily intended to cache complete pages for
-anonymous users.
+Internal Page Cache is primarily intended to cache complete pages for anonymous users.
 
-Dynamic Page Cache can cache page components and responses for both
-anonymous and authenticated users, while taking cache contexts and
-permissions into account.
+Dynamic Page Cache caches page responses and components for both anonymous and authenticated users, while taking cache contexts and permissions into account.
 
-Both help reduce the amount of work Drupal performs when serving
-repeated requests.
+Both help reduce the amount of processing Drupal needs to perform when serving repeated requests.
 
-4. Performance Optimization in Drupal
-Q30. How do you improve the performance of a Drupal application?
+# 4. Performance Optimization in Drupal
+
+## Q30. How do you improve the performance of a Drupal application?
+
 Answer:
 
-I approach performance optimization by identifying the bottleneck first
-rather than making random changes.
+I approach performance optimization by identifying the actual bottleneck first rather than making random changes.
 
 My main areas of focus are:
 
-Caching: Configure Drupal cache bins, cache tags, contexts and
-max-age correctly. Use suitable infrastructure caching such as
-Varnish and Redis where appropriate.
-Database optimization: Review slow queries, add appropriate
-indexes and avoid unnecessary entity loads or repeated queries.
-Code optimization: Avoid redundant processing, unnecessary loops
-and expensive operations during every page request.
-API optimization: Cache external API responses, set timeouts and
-avoid unnecessary calls.
-Frontend optimization: Optimize images, reduce unnecessary
-JavaScript and CSS, and enable aggregation where appropriate.
-Infrastructure: Use appropriate PHP, web server, database and
-server configurations.
-Monitoring: Profile the application and measure response times
-before and after changes.
-Q31. Which tools do you use to identify performance issues in Drupal?
+1\. Caching
+
+- Configure Drupal cache bins correctly.
+- Use cache tags, contexts and max-age appropriately.
+- Use Varnish and Redis where appropriate.
+- Avoid unnecessary cache invalidation.
+
+2\. Database Optimization
+
+- Identify slow queries.
+- Review query execution plans.
+- Add appropriate database indexes.
+- Avoid unnecessary entity loads and repeated queries.
+
+3\. Code Optimization
+
+- Avoid redundant processing.
+- Avoid expensive operations during every page request.
+- Use efficient data retrieval methods.
+- Keep reusable business logic in services.
+
+4\. API Optimization
+
+- Cache external API responses.
+- Configure timeouts.
+- Avoid unnecessary API calls.
+- Use queues for long-running operations.
+
+5\. Frontend Optimization
+
+- Optimize images.
+- Reduce unnecessary JavaScript and CSS.
+- Enable aggregation where appropriate.
+- Use lazy loading where suitable.
+
+6\. Infrastructure Optimization
+
+- Review PHP configuration.
+- Monitor web server and database performance.
+- Ensure adequate CPU and memory resources.
+
+7\. Monitoring and Profiling
+
+- Measure response times.
+- Identify bottlenecks.
+- Profile expensive operations.
+- Compare performance before and after changes.
+
+## Q31. Which tools do you use to identify performance issues in Drupal?
+
 Answer:
 
-I would use a combination of Drupal-specific tools, PHP profiling tools
-and infrastructure monitoring.
+I use a combination of Drupal-specific debugging tools, PHP profiling tools, database tools and application monitoring tools.
 
-Tool Purpose
+| Tool             | Purpose                                                             |
+| ---------------- | ------------------------------------------------------------------- |
+| Devel            | Development debugging and inspection                                |
+| Webprofiler      | Inspects requests, queries and rendering performance                |
+| Xdebug           | PHP debugging and profiling                                         |
+| Blackfire        | Profiles PHP applications and identifies bottlenecks                |
+| New Relic        | Application performance monitoring                                  |
+| MySQL EXPLAIN    | Examines database query execution plans                             |
+| Drush            | Drupal maintenance and diagnostic commands                          |
+| Browser DevTools | Inspects network requests, JavaScript, CSS and frontend performance |
 
-Drupal Devel Development debugging and
-inspection
+The tools depend on the project environment. I use profiling and monitoring data to identify the actual bottleneck.
 
-Webprofiler Inspects requests, queries,
-rendering and performance details
-during development
+## Q32. How do you optimize database performance in Drupal?
 
-Xdebug Debugging and profiling PHP code
-
-Blackfire Profiling PHP applications and
-identifying performance bottlenecks
-
-New Relic Application performance monitoring
-
-MySQL EXPLAIN Examines how database queries are
-executed
-
-Drush Runs Drupal maintenance and
-diagnostic commands
-
-Browser DevTools Inspects network requests,
-JavaScript, CSS and frontend
-performance
-The exact tools depend on the environment. I would use profiling and
-monitoring data to identify the actual bottleneck.
-
-Q32. How do you optimize database performance in Drupal?
 Answer:
 
-I would first identify slow or frequently executed queries using
-profiling and database monitoring tools.
+I first identify slow or frequently executed queries using profiling and database monitoring tools.
+
+Then I:
+
+1. Review query execution plans using `EXPLAIN`.
+2. Add appropriate indexes where necessary.
+3. Avoid unnecessary entity loads.
+4. Avoid repeated queries inside loops.
+5. Use EntityQuery or Drupal's Database API appropriately.
+6. Retrieve only the required fields and records.
+7. Use caching to avoid repeated database access.
+8. Review custom code and Views that generate expensive queries.
+
+## Q33. How do you optimize Drupal frontend performance?
+
+Answer:
+
+I optimize images, reduce unnecessary JavaScript and CSS, enable CSS and JavaScript aggregation where appropriate, and minimize render-blocking resources.
+
+I also use responsive images, lazy loading where suitable, browser caching and a CDN for static assets when supported by the infrastructure.
+
+## Q34. What is the difference between performance monitoring and profiling?
+
+Answer:
+
+Performance monitoring tracks application performance over time, including response times, error rates, throughput and resource usage.
+
+Profiling examines a specific request or execution to identify where time and resources are being consumed, such as slow PHP functions, database queries or expensive operations.
+
+Monitoring helps identify that a problem exists, while profiling helps investigate why it exists.
+
+## Q35. How would you troubleshoot a slow Drupal page?
+
+Answer:
+
+I would first reproduce the issue and determine whether it affects one page, a particular user type or the entire application.
 
 Then I would:
 
-Review query execution plans using EXPLAIN.
-Add appropriate indexes where necessary.
-Avoid unnecessary entity loads and repeated queries.
-Use EntityQuery or Drupal's database API appropriately.
-Retrieve only the fields and records required.
-Use caching to avoid repeated database access.
-Review custom code and Views that generate expensive queries.
-Q33. How do you optimize Drupal frontend performance?
+1. Check the browser Network tab for response times and slow assets.
+2. Review application monitoring data.
+3. Profile the request to identify slow PHP functions and database queries.
+4. Check cache configuration and cache hit rates.
+5. Inspect external API calls and their response times.
+6. Review database query execution plans.
+7. Check server resources such as CPU, memory and PHP-FPM capacity.
+8. Apply the required optimization.
+9. Measure performance again to verify the improvement.
+
+## Q36. What are common performance mistakes in Drupal?
+
 Answer:
 
-I would optimize images, reduce unnecessary JavaScript and CSS, enable
-CSS and JavaScript aggregation where appropriate, and minimize
-render-blocking resources.
+Common performance mistakes include:
 
-I would also use responsive images, lazy loading where suitable, browser
-caching and a CDN for static assets when the infrastructure supports it.
+- Incorrect or missing cache metadata.
+- Repeated database queries inside loops.
+- Loading entities unnecessarily.
+- Making external API calls on every page request.
+- Performing expensive processing inside hooks or controllers.
+- Not using pagination for large datasets.
+- Poorly optimized Views and database queries.
+- Loading unnecessary JavaScript, CSS and large images.
+- Using inappropriate cache contexts or invalidation strategies.
 
-Q34. What is the difference between performance monitoring and profiling?
+# 5. Practical Interview Scenarios
+
+## Q37. An external API is taking five seconds to respond. How would you handle it?
+
 Answer:
 
-Performance monitoring tracks application performance over time, such as
-response times, error rates, throughput and resource usage.
+I would first measure the API response time and determine whether the delay is consistent or intermittent.
 
-Profiling examines a specific request or execution to identify where
-time or resources are being consumed, such as slow functions, database
-queries or expensive operations.
+I would configure appropriate connection and request timeouts, cache the response if the data does not need to be real-time, and avoid making the API call on every page load.
 
-Monitoring helps identify that a problem exists; profiling helps
-investigate why it exists.
+If the operation is long-running, I would consider processing it asynchronously using Drupal's Queue API.
 
-Q35. How would you troubleshoot a slow Drupal page?
+I would also monitor API response times and failures.
+
+## Q38. An external API is temporarily unavailable. How would you prevent it from affecting the Drupal website?
+
 Answer:
 
-I would first reproduce the issue and determine whether it affects one
-page, a particular user type or the entire application.
+I would handle connection failures and HTTP errors gracefully.
 
-Then I would:
+I would use appropriate timeouts and ensure that an API exception does not break the entire page.
 
-Check the browser Network tab for response time and slow assets.
-Review application monitoring data.
-Profile the request to identify slow PHP functions and database
-queries.
-Check cache hit rates and cache configuration.
-Inspect external API calls and their response times.
-Review database query execution plans.
-Check server resources such as CPU, memory and PHP-FPM capacity.
-Apply the required optimization and measure the result again.
-Q36. What are common performance mistakes in Drupal?
+If appropriate, I would serve previously cached data or a fallback response.
+
+For repeated failures, I would consider retry policies with backoff and asynchronous processing.
+
+I would also log the failure and monitor the integration.
+
+## Q39. A Drupal page is accessed by thousands of anonymous users. How would you improve its performance?
+
 Answer:
 
-Common mistakes include:
+I would ensure Drupal's Internal Page Cache and Dynamic Page Cache are configured appropriately.
 
-Incorrect or missing cache metadata.
-Repeated database queries inside loops.
-Loading entities unnecessarily.
-Making external API calls on every page request.
-Performing expensive processing inside hooks or controllers.
-Not using pagination for large datasets.
-Poorly optimized Views and database queries.
-Loading unnecessary JavaScript, CSS and large images.
-Using cache contexts that are too broad or too specific without
-understanding their impact.
-5. Practical Scenarios
-Q37. An external API is taking five seconds to respond. How would you handle it?
+I would also consider Varnish or a CDN to serve cached responses and reduce requests reaching Drupal.
+
+Additionally, I would verify cache metadata, optimize database queries and monitor cache hit rates, response times and server resources.
+
+## Q40. A page displays different content depending on the logged-in user. How would you cache it correctly?
+
 Answer:
 
-I would first measure the API response time and determine whether the
-delay is consistent or intermittent.
+I would use the appropriate cache contexts to vary the output based on the relevant user-specific information, such as user permissions or user identity.
 
-I would set appropriate connection and request timeouts, cache the
-response if the data does not need to be real-time, and avoid making the
-API call on every page load.
+I would use cache tags to invalidate the output when its underlying data changes and configure an appropriate max-age.
 
-If the operation is long-running, I would consider processing it
-asynchronously using Drupal's Queue API. I would also log failures and
-monitor response times.
+I would avoid using a single shared cache entry for content that differs between users.
 
-Q38. An external API is temporarily unavailable. How would you prevent it from affecting the Drupal website?
+# 6. Quick Revision Tables
+
+## Q41. Summarize the main components involved in a Drupal HTTP request.
+
 Answer:
 
-I would handle connection failures and HTTP errors gracefully, use
-timeouts, and avoid allowing the exception to break the entire page.
+| Component         | Responsibility                             |
+| ----------------- | ------------------------------------------ |
+| Browser           | Sends HTTP requests and receives responses |
+| DNS               | Resolves domain names into IP addresses    |
+| CDN               | Distributes and may cache content          |
+| Load Balancer     | Distributes traffic across servers         |
+| Varnish           | Caches HTTP responses                      |
+| Nginx / Apache    | Handles incoming web requests              |
+| PHP               | Executes Drupal's PHP code                 |
+| index.php         | Entry point for Drupal web requests        |
+| Drupal Kernel     | Bootstraps and handles the request         |
+| Routing           | Matches URLs to routes                     |
+| Access Checks     | Determines whether access is allowed       |
+| Controller        | Handles request-specific application logic |
+| Services          | Provide reusable application functionality |
+| Redis / Memcached | Store application cache data in memory     |
+| Database          | Stores persistent application data         |
+| Render API        | Converts render arrays into output         |
 
-If appropriate, I would serve previously cached data or a fallback
-response. For repeated failures, I would consider retry policies with
-backoff and asynchronous processing. I would also log the failure and
-monitor the integration.
+## Q42. Summarize the main caching concepts in Drupal.
 
-Q39. A Drupal page is accessed by thousands of anonymous users. How would you improve its performance?
 Answer:
 
-I would make sure Drupal's Internal Page Cache and Dynamic Page Cache
-are configured appropriately. I would also consider Varnish or a CDN to
-serve cached responses closer to users and reduce requests reaching
-Drupal.
+| Concept             | Meaning                                                   |
+| ------------------- | --------------------------------------------------------- |
+| Cache Bin           | Logical collection of cached data                         |
+| Cache Tag           | Identifies a dependency for invalidation                  |
+| Cache Context       | Varies cached output based on request context             |
+| Cache Max-Age       | Defines how long cached data remains valid                |
+| Varnish             | Reverse proxy that caches HTTP responses                  |
+| Redis               | In-memory data store usable as a Drupal cache backend     |
+| Memcached           | In-memory caching system usable as a Drupal cache backend |
+| Internal Page Cache | Primarily caches pages for anonymous users                |
+| Dynamic Page Cache  | Caches dynamic page responses and components              |
 
-I would verify cache metadata, optimize database queries, and monitor
-cache hit rates, response times and server resources.
+## Q43. Summarize the recommended practices for external API integration.
 
-Q40. A page displays different content depending on the logged-in user. How would you cache it correctly?
 Answer:
 
-I would use the appropriate cache contexts to vary the output based on
-the relevant user-specific information, such as user permissions or user
-identity, depending on the requirement.
+- Use Drupal's HTTP Client service.
+- Use dependency injection.
+- Keep API calls in a dedicated custom service.
+- Store credentials securely.
+- Use HTTPS.
+- Configure timeouts.
+- Handle exceptions and HTTP status codes.
+- Validate and map API responses.
+- Cache responses where appropriate.
+- Respect rate limits.
+- Log failures safely.
+- Test API integrations using mocked responses.
+- Use queues for long-running operations.
 
-I would use cache tags to invalidate the output when its underlying data
-changes and set an appropriate max-age.
+# 7. Last-Minute Interview Revision
 
-I would avoid using a single shared cache entry for content that differs
-between users.
+## Q44. Explain the difference between Varnish and Redis in one sentence.
 
-6. Quick Revision Tables
-Q41. Summarize the main components involved in a Drupal HTTP request.
 Answer:
 
-Component Responsibility
+Varnish caches complete HTTP responses before they reach Drupal, whereas Redis stores application-level data in memory for Drupal to retrieve quickly.
 
-Browser Sends the HTTP request and receives the response
-DNS Resolves the domain name to an IP address
-CDN Distributes and may cache content
-Load balancer Distributes traffic across backend servers
-Varnish Caches HTTP responses
-Nginx / Apache Handles incoming web requests
-PHP Executes Drupal's PHP code
-index.php Entry point for Drupal web requests
-Drupal kernel Bootstraps and handles the request
-Routing Matches the URL to a route
-Access checks Determines whether the request is allowed
-Controller Handles request-specific application logic
-Services Provide reusable application functionality
-Redis / Memcached Store application cache data in memory
-Database Stores persistent application data
-Render API Converts render arrays into output
+## Q45. How do you integrate an external API with Drupal in one sentence?
 
-Q42. Summarize the main caching concepts in Drupal.
 Answer:
 
-Concept Meaning
+I use Drupal's HTTP Client service through dependency injection, encapsulate the API communication in a custom service, and handle authentication, responses, errors, timeouts and caching appropriately.
 
-Cache bin Logical collection of cached data
+## Q46. What are the three most important Drupal cache metadata concepts?
 
-Cache tag Identifies a dependency for
-invalidation
-
-Cache context Varies cached output based on
-request context
-
-Cache max-age Defines how long cached data
-remains valid
-
-Varnish Reverse proxy that caches HTTP
-responses
-
-Redis In-memory data store usable as a
-Drupal cache backend
-
-Memcached In-memory caching system usable as
-a Drupal cache backend
-
-Internal Page Cache Primarily caches pages for
-anonymous users
-
-Dynamic Page Cache Caches dynamic page responses and
-components
-Q43. Summarize the recommended practices for external API integration.
 Answer:
 
-Use Drupal's HTTP Client service.
-Use dependency injection.
-Keep API calls in a dedicated custom service.
-Store credentials securely.
-Use HTTPS.
-Configure timeouts.
-Handle exceptions and HTTP status codes.
-Validate and map API responses.
-Cache responses where appropriate.
-Respect rate limits.
-Log failures safely.
-Test API integrations using mocked responses.
-Use queues for long-running operations.
-7. Last-Minute Interview Revision
-Q44. Explain the difference between Varnish and Redis in one sentence.
+Cache tags identify when cached data should be invalidated, cache contexts determine when cached output should vary, and cache max-age defines how long the cached data remains valid.
+
+## Q47. What is your approach to Drupal performance optimization?
+
 Answer:
 
-Varnish caches complete HTTP responses before they reach Drupal, whereas
-Redis stores application-level data in memory for Drupal to retrieve
-quickly.
+I identify the bottleneck through monitoring and profiling, then optimize caching, database queries, application code, external API calls, frontend assets and infrastructure based on the measurements.
 
-Q45. How do you integrate an external API with Drupal in one sentence?
+# 8. Important Drush Commands
+
+## Q48. Which Drush commands are useful for Drupal maintenance?
+
 Answer:
 
-I use Drupal's HTTP Client service through dependency injection,
-encapsulate the API communication in a custom service, and handle
-authentication, responses, errors, timeouts and caching appropriately.
-
-Q46. What are the three most important Drupal cache metadata concepts?
-Answer:
-
-Cache tags identify when cached data should be invalidated, cache
-contexts determine when cached output should vary, and cache max-age
-defines how long the cached data remains valid.
-
-Q47. What is your approach to Drupal performance optimization?
-Answer:
-
-I identify the bottleneck through monitoring and profiling, then
-optimize caching, database queries, application code, external API
-calls, frontend assets and infrastructure based on the measurements.
-
-8. Important Commands for Revision
+```
 # Check Drupal status.
 drush status
 
@@ -1830,31 +1440,35 @@ drush cex
 
 # Import configuration.
 drush cim
-9. Topics to Be Ready to Explain Verbally
-Explain an external API integration you have implemented.
-Explain why you would use a custom service instead of putting API
-logic in a controller.
-Explain how dependency injection works in Drupal.
-Explain how you handle API authentication and failures.
-Explain how you prevent repeated API calls.
-Explain Varnish versus Redis.
-Explain cache tags, contexts and max-age with an example.
-Explain Internal Page Cache versus Dynamic Page Cache.
-Explain how you investigate a slow Drupal page.
-Explain which tools you use for profiling and monitoring.
-Explain how you optimize database queries.
-Explain the complete HTTP request and response lifecycle.
-Interview reminder: Give the direct answer first, then explain the
-implementation or provide an example. For questions about your own
-experience, use a real project example rather than claiming experience
-with a tool or implementation you have not personally used.
+```
 
+# 9. Important Topics to Explain Verbally
 
+Prepare to explain these topics with practical examples from your project experience:
 
+1. Explain an external API integration you have implemented.
+2. Explain why you would use a custom service instead of putting API logic in a controller.
+3. Explain how dependency injection works in Drupal.
+4. Explain how you handle API authentication and failures.
+5. Explain how you prevent repeated API calls.
+6. Explain Varnish versus Redis.
+7. Explain cache tags, contexts and max-age with an example.
+8. Explain Internal Page Cache versus Dynamic Page Cache.
+9. Explain how you investigate a slow Drupal page.
+10. Explain which tools you use for profiling and monitoring.
+11. Explain how you optimize database queries.
+12. Explain the complete HTTP request and response lifecycle.
 
+Final Interview Reminder:
 
+Give the direct answer first, then explain the implementation or provide an example.
 
+For questions about your own experience, use a real project example rather than claiming experience with a tool or implementation you have not personally used.
 
+```
+
+**One technical note:** The diagrams use ordinary box-drawing characters and arrows, not Mermaid. They will remain readable when pasted into GitHub Markdown. For best alignment, keep them inside fenced `text` code blocks.
+```
 ---
 
 ## Quick Revision: Commands to Remember
